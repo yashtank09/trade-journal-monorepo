@@ -32,13 +32,15 @@ public class FileController {
     public ResponseEntity<DataApiResponse<FileUploadResponse>> uploadFile(@Parameter(description = "Metadata for the file", content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE)) @RequestPart("file-metadata") FileUploadRequest fileRequest, @AuthenticationPrincipal AppUserDetails userDetails, @RequestPart("file") MultipartFile file) {
 
         if (file == null || file.isEmpty()) {
-            return new ResponseEntity<>(new DataApiResponse<>(STATUS_ERROR, CODE_BAD_REQUEST, MSG_FILE_MISSING), HttpStatus.BAD_REQUEST);
+            return ResponseEntity.badRequest().body(DataApiResponse.error(CODE_BAD_REQUEST, MSG_FILE_MISSING));
         }
 
         Long userId = userDetails.getId();
 
         FileProcessor fileProcessor = storageService.uploadFile(userId, fileRequest, file);
 
-        return new ResponseEntity<>((new DataApiResponse<>(STATUS_SUCCESS, CODE_SUCCESS, MSG_FILE_UPLOAD_SUCCESS, new FileUploadResponse(fileProcessor.getOriginalFileName(), fileProcessor.getFileType(), fileProcessor.getStoredPath(), fileProcessor.getStatus(), fileProcessor.getCreatedAt(), fileProcessor.getUpdatedAt()))), HttpStatus.OK);
+        FileUploadResponse response = new FileUploadResponse(fileProcessor.getOriginalFileName(), fileProcessor.getFileType(), fileProcessor.getStoredPath(), fileProcessor.getStatus(), fileProcessor.getCreatedAt(), fileProcessor.getUpdatedAt());
+
+        return ResponseEntity.ok(DataApiResponse.success(CODE_SUCCESS, MSG_FILE_UPLOAD_SUCCESS, response));
     }
 }

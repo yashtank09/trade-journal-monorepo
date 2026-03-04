@@ -10,18 +10,32 @@ import static org.tradebook.journal.common.constants.ApiConstants.*;
 
 @ControllerAdvice
 public class GlobalExceptionHandler {
+
+    @ExceptionHandler(EmailAlreadyExistsException.class)
+    public ResponseEntity<DataApiResponse<Void>> handleEmailAlreadyExistsException(EmailAlreadyExistsException ex) {
+        return ResponseEntity
+                .status(HttpStatus.CONFLICT)
+                .body(DataApiResponse.error(CODE_BAD_REQUEST, ex.getMessage()));
+    }
+
     @ExceptionHandler(FileValidationException.class)
     public ResponseEntity<DataApiResponse<Void>> handleFileValidationException(FileValidationException ex) {
-        return ResponseEntity.badRequest().body(new DataApiResponse<>(STATUS_ERROR, CODE_BAD_REQUEST, ex.getMessage()));
+        return ResponseEntity
+                .badRequest()
+                .body(DataApiResponse.error(CODE_BAD_REQUEST, ex.getMessage()));
     }
 
     @ExceptionHandler(FileStorageExcpetion.class)
     public ResponseEntity<DataApiResponse<Void>> handleFileStorageException(FileStorageExcpetion ex) {
-        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(new DataApiResponse<>(STATUS_ERROR, CODE_INTERNAL_ERROR, ex.getMessage()));
+        return ResponseEntity
+                .status(HttpStatus.INTERNAL_SERVER_ERROR)
+                .body(DataApiResponse.error(CODE_INTERNAL_ERROR, ex.getMessage()));
     }
 
     @ExceptionHandler(Exception.class)
     public ResponseEntity<DataApiResponse<Void>> handleGlobalException(Exception ex) {
-        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(new DataApiResponse<>(STATUS_ERROR, CODE_INTERNAL_ERROR, "An unexpected error occurred {} " + ex.getMessage()));
+        return ResponseEntity
+                .status(HttpStatus.INTERNAL_SERVER_ERROR)
+                .body(DataApiResponse.error(CODE_INTERNAL_ERROR, "An unexpected error occurred: " + ex.getMessage()));
     }
 }

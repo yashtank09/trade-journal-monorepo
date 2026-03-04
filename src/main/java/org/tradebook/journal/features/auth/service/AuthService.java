@@ -7,7 +7,8 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
-import org.tradebook.journal.common.exception.TradeBookException;
+import org.tradebook.journal.common.exception.EmailAlreadyExistsException;
+import org.tradebook.journal.config.ApplicationProperties;
 import org.tradebook.journal.config.security.JwtService;
 import org.tradebook.journal.features.auth.dto.response.AuthResponse;
 import org.tradebook.journal.features.auth.dto.request.LoginRequest;
@@ -25,13 +26,19 @@ public class AuthService {
     private final JwtService jwtService;
     private final AuthenticationManager authenticationManager;
     private final UserDetailsService userDetailsService;
+    private final TokenBlacklistService tokenBlacklistService;
+    private final ApplicationProperties applicationProperties;
 
     public AuthResponse register(RegisterRequest request) {
         if (repository.findByEmail(request.getEmail()).isPresent()) {
-            throw new TradeBookException(MSG_EMAIL_IN_USE);
+            throw new EmailAlreadyExistsException(MSG_EMAIL_IN_USE);
         }
 
-        var user = User.builder().email(request.getEmail()).passwordHash(passwordEncoder.encode(request.getPassword())).currency(request.getCurrency() != null ? request.getCurrency() : "USD").build();
+        var user = User.builder()
+                .email(request.getEmail())
+                .passwordHash(passwordEncoder.encode(request.getPassword()))
+                .currency(request.getCurrency() != null ? request.getCurrency() : applicationProperties.getDefaultCurrency())
+                .build();
         repository.save(user);
 
         // Generate token for immediate login
@@ -48,8 +55,6 @@ public class AuthService {
     }
 
     public void logout(String token) {
-        // In a stateless JWT architecture, the server doesn't "invalidate" tokens.
-        // The client simply discards the token.
-        // If token blacklisting is needed, it would be implemented here (e.g., storing the token in Redis with an expiration).
+        tokenBlacklistService.blacklist(token);
     }
 }

@@ -7,6 +7,7 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import org.tradebook.journal.common.constants.ApiConstants;
 
 import java.time.Instant;
 
@@ -51,28 +52,30 @@ public class DataApiResponse<T> {
     @JsonProperty("timestamp")
     private Instant timestamp = Instant.now(); // Default value is now()
 
-    public DataApiResponse(String status, int statusCode, String statusMessage, T data) {
-        this.status = status;
-        this.statusCode = statusCode;
-        this.statusMessage = statusMessage;
-        this.data = data;
-        this.timestamp = Instant.now();
+    public static <T> DataApiResponse<T> success(int statusCode, String message, T data) {
+        return DataApiResponse.<T>builder()
+                .status(ApiConstants.STATUS_SUCCESS)
+                .statusCode(statusCode)
+                .statusMessage(message)
+                .data(data)
+                .build();
     }
 
-    public DataApiResponse(String status, int statusCode, String statusMessage) {
-        this.status = status;
-        this.statusCode = statusCode;
-        this.statusMessage = statusMessage;
-        this.timestamp = Instant.now();
+    public static <T> DataApiResponse<T> success(int statusCode, String message, T data, String token) {
+        return DataApiResponse.<T>builder()
+                .status(ApiConstants.STATUS_SUCCESS)
+                .statusCode(statusCode)
+                .statusMessage(message)
+                .data(data)
+                .token(token)
+                .build();
     }
 
-    public DataApiResponse(String status, int statusCode, String statusMessage, String token, T data) {
-        this.status = status;
-        this.statusCode = statusCode;
-        this.statusMessage = statusMessage;
-        this.token = token;
-        this.timestamp = Instant.now();
-        this.data = data;
+    public static <T> DataApiResponse<T> error(int statusCode, String message) {
+        return DataApiResponse.<T>builder()
+                .status(ApiConstants.STATUS_ERROR)
+                .statusCode(statusCode)
+                .statusMessage(message)
+                .build();
     }
-
 }

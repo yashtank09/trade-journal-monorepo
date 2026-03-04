@@ -21,13 +21,13 @@ public class AuthController {
     @PostMapping("/register")
     public ResponseEntity<DataApiResponse<AuthResponse>> register(@RequestBody RegisterRequest request) {
         AuthResponse response = service.register(request);
-        return ResponseEntity.ok(new DataApiResponse<>(STATUS_SUCCESS, CODE_SUCCESS, MSG_REGISTER_SUCCESS, response.getToken(), response));
+        return ResponseEntity.ok(DataApiResponse.success(CODE_SUCCESS, MSG_REGISTER_SUCCESS, response, response.getToken()));
     }
 
     @PostMapping("/login")
     public ResponseEntity<DataApiResponse<AuthResponse>> authenticate(@RequestBody LoginRequest request) {
         AuthResponse response = service.authenticate(request);
-        return ResponseEntity.ok(new DataApiResponse<>(STATUS_SUCCESS, CODE_SUCCESS, MSG_LOGIN_SUCCESS, response.getToken(), response));
+        return ResponseEntity.ok(DataApiResponse.success(CODE_SUCCESS, MSG_LOGIN_SUCCESS, response, response.getToken()));
     }
 
     @PostMapping("/logout")
@@ -36,6 +36,6 @@ public class AuthController {
             String token = authHeader.substring(7);
             service.logout(token);
         }
-        return ResponseEntity.ok(new DataApiResponse<>(STATUS_SUCCESS, CODE_SUCCESS, MSG_LOGOUT_SUCCESS, null, null));
+        return ResponseEntity.ok(DataApiResponse.success(CODE_SUCCESS, MSG_LOGOUT_SUCCESS, null));
     }
 }
