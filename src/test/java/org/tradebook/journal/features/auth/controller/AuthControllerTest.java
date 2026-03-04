@@ -8,9 +8,9 @@ import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
-import org.tradebook.journal.features.auth.dto.AuthResponse;
-import org.tradebook.journal.features.auth.dto.LoginRequest;
-import org.tradebook.journal.features.auth.dto.RegisterRequest;
+import org.tradebook.journal.features.auth.dto.response.AuthResponse;
+import org.tradebook.journal.features.auth.dto.request.LoginRequest;
+import org.tradebook.journal.features.auth.dto.request.RegisterRequest;
 import org.tradebook.journal.features.auth.service.AuthService;
 
 import static org.mockito.ArgumentMatchers.any;

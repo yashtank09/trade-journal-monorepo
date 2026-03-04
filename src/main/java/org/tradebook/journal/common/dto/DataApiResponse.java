@@ -1,4 +1,4 @@
-package org.tradebook.journal.features.ingestion.dto.response;
+package org.tradebook.journal.common.dto;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -22,8 +22,9 @@ import java.time.Instant;
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @Schema(description = "Standard API response wrapper containing status, message, and optional data")
 public class DataApiResponse<T> {
-    @Schema(description = "Status of the API response (e.g., 'success', 'error')", example = "success", allowableValues = {
-            "success", "error" })
+    @Schema(description = "Status of the API response (e.g., 'success', 'error')",
+            example = "success",
+            allowableValues = {"success", "error"})
     @JsonProperty("status")
     private String status;
 
@@ -31,22 +32,24 @@ public class DataApiResponse<T> {
     @JsonProperty("status-code")
     private int statusCode;
 
-    @Schema(description = "Human-readable message describing the response", example = "Operation completed successfully")
+    @Schema(description = "Human-readable message describing the response",
+            example = "Operation completed successfully")
     @JsonProperty("status-message")
     private String statusMessage;
 
-    @Schema(description = "JWT token for authenticated requests (if applicable)", example = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...")
+    @Schema(description = "JWT token for authenticated requests (if applicable)",
+            example = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...")
     @JsonProperty("token")
     private String token;
 
-    @Schema(description = "The actual data payload of the response (if any)", nullable = true)
+    @Schema(description = "The actual data payload of the response (if any)",
+            nullable = true)
     @JsonProperty("data")
     private T data;
 
     @Schema(description = "Timestamp of the API response (UTC)")
     @JsonProperty("timestamp")
-    @Builder.Default
-    private Instant timestamp = Instant.now();
+    private Instant timestamp = Instant.now(); // Default value is now()
 
     public DataApiResponse(String status, int statusCode, String statusMessage, T data) {
         this.status = status;
@@ -71,4 +74,5 @@ public class DataApiResponse<T> {
         this.timestamp = Instant.now();
         this.data = data;
     }
+
 }

@@ -6,7 +6,8 @@ import org.tradebook.journal.common.entity.BaseEntity;
 
 @Entity
 @Table(name = "users")
-@Data
+@Getter
+@Setter
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
