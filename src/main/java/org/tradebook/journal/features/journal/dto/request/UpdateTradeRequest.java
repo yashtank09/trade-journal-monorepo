@@ -13,6 +13,7 @@ import java.time.LocalDateTime;
 @NoArgsConstructor
 @AllArgsConstructor
 public class UpdateTradeRequest {
+    private Long tradeId;
     private BigDecimal exitPrice;
     private LocalDateTime exitTime;
     private BigDecimal fees;

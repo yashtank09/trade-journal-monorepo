@@ -2,17 +2,21 @@ package org.tradebook.journal.features.journal.service;
 
 import org.tradebook.journal.features.journal.dto.request.CreateTradeRequest;
 import org.tradebook.journal.features.journal.dto.request.UpdateTradeRequest;
-import org.tradebook.journal.features.journal.dto.response.TradeResponse;
+import org.tradebook.journal.features.journal.dto.response.TradeDetailResponse;
+import org.tradebook.journal.features.journal.dto.response.TradeSummaryResponse;
 
 import java.time.LocalDate;
 import java.util.List;
 
 public interface TradeService {
-    TradeResponse createTrade(Long userId, CreateTradeRequest request);
 
-    TradeResponse updateTrade(Long tradeId, Long userId, UpdateTradeRequest request);
+    TradeDetailResponse createTrade(Long userId, CreateTradeRequest request);
 
-    TradeResponse getTrade(Long tradeId, Long userId);
+    TradeDetailResponse updateTrade(Long tradeId, Long userId, UpdateTradeRequest request);
 
-    List<TradeResponse> getTrades(Long userId, LocalDate startDate, LocalDate endDate);
+    TradeDetailResponse getTrade(Long tradeId, Long userId);
+
+    List<TradeSummaryResponse> getTrades(Long userId, LocalDate startDate, LocalDate endDate);
+
+    List<TradeSummaryResponse> getOpenTrades(Long userId);
 }

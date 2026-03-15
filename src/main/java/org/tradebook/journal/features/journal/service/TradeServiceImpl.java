@@ -8,7 +8,8 @@ import org.tradebook.journal.features.auth.entity.User;
 import org.tradebook.journal.features.auth.repository.UserRepository;
 import org.tradebook.journal.features.journal.dto.request.CreateTradeRequest;
 import org.tradebook.journal.features.journal.dto.request.UpdateTradeRequest;
-import org.tradebook.journal.features.journal.dto.response.TradeResponse;
+import org.tradebook.journal.features.journal.dto.response.TradeDetailResponse;
+import org.tradebook.journal.features.journal.dto.response.TradeSummaryResponse;
 import org.tradebook.journal.features.journal.entity.Instrument;
 import org.tradebook.journal.features.journal.entity.Trade;
 import org.tradebook.journal.features.journal.entity.TradePlan;
@@ -20,7 +21,7 @@ import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
-import java.util.stream.Collectors;
+import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
@@ -33,132 +34,80 @@ public class TradeServiceImpl implements TradeService {
 
     @Override
     @Transactional
-    public TradeResponse createTrade(Long userId, CreateTradeRequest request) {
-        User user = userRepository.findById(userId)
-                .orElseThrow(() -> new TradeBookException("User not found"));
+    public TradeDetailResponse createTrade(Long userId, CreateTradeRequest request) {
+        User user = userRepository.findById(userId).orElseThrow(() -> new TradeBookException("User not found"));
+        Instrument instrument = instrumentRepository.findBySymbolAndExchange(request.getSymbol(), request.getExchange()).orElseGet(() -> {
+            Instrument newInstrument = Instrument.builder().symbol(request.getSymbol()).exchange(request.getExchange() != null ? request.getExchange() : "NSE").type(request.getType() != null ? request.getType() : "EQUITY").build();
+            return instrumentRepository.save(newInstrument);
+        });
 
-        // Find or create instrument
-        Instrument instrument = instrumentRepository.findBySymbolAndExchange(request.getSymbol(), request.getExchange())
-                .orElseGet(() -> {
-                    Instrument newInstrument = Instrument.builder()
-                            .symbol(request.getSymbol())
-                            .exchange(request.getExchange() != null ? request.getExchange() : "NSE")
-                            .type(request.getType() != null ? request.getType() : "EQUITY")
-                            .build();
-                    return instrumentRepository.save(newInstrument);
-                });
+        LocalDate tradeDate = request.getTradeDate() != null ? request.getTradeDate() : LocalDate.now();
+        LocalDateTime entryTime = request.getEntryTime() != null ? request.getEntryTime() : tradeDate.atStartOfDay();
 
-        LocalDate tradeDate = request.getTradeDate();
-        LocalDateTime entryTime = request.getEntryTime();
-
-        if (tradeDate == null && entryTime != null) {
-            tradeDate = entryTime.toLocalDate();
-        } else if (tradeDate == null) {
-            tradeDate = LocalDate.now();
-        }
-
-        if (entryTime == null) {
-            entryTime = tradeDate.atStartOfDay();
-        }
-
-        Trade trade = Trade.builder()
-                .user(user)
-                .instrument(instrument)
-                .tradeDate(tradeDate)
-                .direction(request.getDirection())
-                .quantity(request.getQuantity())
-                .entryPrice(request.getEntryPrice())
-                .entryTime(entryTime)
-                .status("OPEN")
-                .build();
-
+        Trade trade = Trade.builder().user(user).instrument(instrument).tradeDate(tradeDate).direction(request.getDirection()).quantity(request.getQuantity()).entryPrice(request.getEntryPrice()).entryTime(entryTime).status("OPEN").build();
         trade = tradeRepository.save(trade);
 
         if (request.getPlan() != null) {
-            TradePlan plan = TradePlan.builder()
-                    .trade(trade)
-                    .targetPrice(request.getPlan().getTargetPrice())
-                    .stopLoss(request.getPlan().getStopLoss())
-                    .setupReason(request.getPlan().getSetupNote())
-                    // Calculate risk if needed: abs(entry - stop) * qty
-                    .build();
+            TradePlan plan = TradePlan.builder().trade(trade).targetPrice(request.getPlan().getTargetPrice()).stopLoss(request.getPlan().getStopLoss()).setupReason(request.getPlan().getSetupNote()).build();
             tradePlanRepository.save(plan);
         }
 
-        return mapToResponse(trade);
+        return mapToDetailResponse(trade);
     }
 
     @Override
     @Transactional
-    public TradeResponse updateTrade(Long tradeId, Long userId, UpdateTradeRequest request) {
-        Trade trade = tradeRepository.findById(tradeId)
-                .orElseThrow(() -> new TradeBookException("Trade not found"));
-
+    public TradeDetailResponse updateTrade(Long tradeId, Long userId, UpdateTradeRequest request) {
+        Trade trade = tradeRepository.findById(tradeId).orElseThrow(() -> new TradeBookException("Trade not found"));
         if (!trade.getUser().getId().equals(userId)) {
             throw new TradeBookException("Unauthorized access to trade");
         }
 
-        if (request.getStatus() != null) {
-            trade.setStatus(request.getStatus());
-        }
+        if (request.getStatus() != null) trade.setStatus(request.getStatus());
+        if (request.getExitPrice() != null) trade.setExitPrice(request.getExitPrice());
+        if (request.getExitTime() != null) trade.setExitTime(request.getExitTime());
+        if (request.getFees() != null) trade.setFees(request.getFees());
 
-        if (request.getExitPrice() != null) {
-            trade.setExitPrice(request.getExitPrice());
-        }
-
-        if (request.getExitTime() != null) {
-            trade.setExitTime(request.getExitTime());
-        }
-
-        if (request.getFees() != null) {
-            trade.setFees(request.getFees());
-        }
-
-        // Calculate PnL if closed
-        if ("CLOSED".equalsIgnoreCase(trade.getStatus()) && trade.getExitPrice() != null
-                && trade.getEntryPrice() != null) {
+        if ("CLOSED".equalsIgnoreCase(trade.getStatus()) && trade.getExitPrice() != null && trade.getEntryPrice() != null) {
             BigDecimal exitVal = trade.getExitPrice().multiply(trade.getQuantity());
             BigDecimal entryVal = trade.getEntryPrice().multiply(trade.getQuantity());
-
-            BigDecimal grossPnl;
-            if ("LONG".equalsIgnoreCase(trade.getDirection())) {
-                grossPnl = exitVal.subtract(entryVal);
-            } else {
-                grossPnl = entryVal.subtract(exitVal);
-            }
-
+            BigDecimal grossPnl = "LONG".equalsIgnoreCase(trade.getDirection()) ? exitVal.subtract(entryVal) : entryVal.subtract(exitVal);
             trade.setGrossPnl(grossPnl);
-
             BigDecimal fees = trade.getFees() != null ? trade.getFees() : BigDecimal.ZERO;
             trade.setNetPnl(grossPnl.subtract(fees));
         }
 
         tradeRepository.save(trade);
-        return mapToResponse(trade);
+        return mapToDetailResponse(trade);
     }
 
     @Override
     @Transactional(readOnly = true)
-    public TradeResponse getTrade(Long tradeId, Long userId) {
-        Trade trade = tradeRepository.findById(tradeId)
-                .orElseThrow(() -> new TradeBookException("Trade not found"));
-
+    public TradeDetailResponse getTrade(Long tradeId, Long userId) {
+        Trade trade = tradeRepository.findById(tradeId).orElseThrow(() -> new TradeBookException("Trade not found"));
         if (!trade.getUser().getId().equals(userId)) {
             throw new TradeBookException("Unauthorized access to trade");
         }
-
-        return mapToResponse(trade);
+        return mapToDetailResponse(trade);
     }
 
     @Override
     @Transactional(readOnly = true)
-    public List<TradeResponse> getTrades(Long userId, LocalDate startDate, LocalDate endDate) {
+    public List<TradeSummaryResponse> getTrades(Long userId, LocalDate startDate, LocalDate endDate) {
         List<Trade> trades = tradeRepository.findByUserIdAndTradeDateBetween(userId, startDate, endDate);
-        return trades.stream().map(this::mapToResponse).collect(Collectors.toList());
+        return trades.stream().map(this::mapToSummaryResponse).toList();
     }
 
-    private TradeResponse mapToResponse(Trade trade) {
-        return TradeResponse.builder()
+    @Override
+    @Transactional(readOnly = true)
+    public List<TradeSummaryResponse> getOpenTrades(Long userId) {
+        List<Trade> trades = tradeRepository.findByUserIdAndStatus(userId, "OPEN");
+        return trades.stream().map(this::mapToSummaryResponse).toList();
+    }
+
+    private TradeDetailResponse mapToDetailResponse(Trade trade) {
+        Optional<TradePlan> planOpt = tradePlanRepository.findByTradeId(trade.getId()).stream().findFirst();
+        return TradeDetailResponse.builder()
                 .id(trade.getId())
                 .symbol(trade.getInstrument().getSymbol())
                 .exchange(trade.getInstrument().getExchange())
@@ -170,10 +119,33 @@ public class TradeServiceImpl implements TradeService {
                 .entryPrice(trade.getEntryPrice())
                 .exitPrice(trade.getExitPrice())
                 .grossPnl(trade.getGrossPnl())
-                .fees(trade.getFees())
                 .netPnl(trade.getNetPnl())
+                .fees(trade.getFees())
                 .entryTime(trade.getEntryTime())
                 .exitTime(trade.getExitTime())
+                .targetPrice(planOpt.map(TradePlan::getTargetPrice).orElse(null))
+                .stopLoss(planOpt.map(TradePlan::getStopLoss).orElse(null))
+                .setupReason(planOpt.map(TradePlan::getSetupReason).orElse(null))
+                .build();
+    }
+
+    private TradeSummaryResponse mapToSummaryResponse(Trade trade) {
+        Optional<TradePlan> planOpt = tradePlanRepository.findByTradeId(trade.getId()).stream().findFirst();
+        return TradeSummaryResponse.builder()
+                .id(trade.getId())
+                .symbol(trade.getInstrument().getSymbol())
+                .exchange(trade.getInstrument().getExchange())
+                .type(trade.getInstrument().getType())
+                .direction(trade.getDirection())
+                .status(trade.getStatus())
+                .date(trade.getTradeDate())
+                .quantity(trade.getQuantity())
+                .entryPrice(trade.getEntryPrice())
+                .entryTime(trade.getEntryTime())
+                .netPnl(trade.getNetPnl())
+                .targetPrice(planOpt.map(TradePlan::getTargetPrice).orElse(null))
+                .stopLoss(planOpt.map(TradePlan::getStopLoss).orElse(null))
+                .setupReason(planOpt.map(TradePlan::getSetupReason).orElse(null))
                 .build();
     }
 }

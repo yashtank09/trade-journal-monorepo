@@ -17,14 +17,14 @@ import java.time.LocalDateTime;
 @AllArgsConstructor
 @Entity
 @Table(
-        name = "trade_position",
+        name = "trade_summary",
         indexes = {
-                @Index(name = "idx_position_symbol_segment", columnList = "symbol, segment"),
-                @Index(name = "idx_position_status", columnList = "status"),
-                @Index(name = "idx_position_last_trade", columnList = "last_trade_id")
+                @Index(name = "idx_summary_symbol_segment", columnList = "symbol, segment"),
+                @Index(name = "idx_summary_position_status", columnList = "position_status"),
+                @Index(name = "idx_summary_last_trade", columnList = "last_trade_id")
         }
 )
-public class TradePositions extends BaseEntity {
+public class TradeSummary extends BaseEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -47,8 +47,8 @@ public class TradePositions extends BaseEntity {
     private PositionDirection direction;
 
     @Enumerated(EnumType.STRING)
-    @Column(name = "status", nullable = false, length = 10)
-    private PositionStatus status;
+    @Column(name = "position_status", nullable = false, length = 10)
+    private PositionStatus positionStatus;
 
     @Column(name = "entry_qty", nullable = false)
     private Long entryQty;

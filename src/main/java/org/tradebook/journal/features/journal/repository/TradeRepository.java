@@ -10,4 +10,5 @@ import java.util.List;
 @Repository
 public interface TradeRepository extends JpaRepository<Trade, Long> {
     List<Trade> findByUserIdAndTradeDateBetween(Long userId, LocalDate startDate, LocalDate endDate);
+    List<Trade> findByUserIdAndStatus(Long userId, String status);
 }
