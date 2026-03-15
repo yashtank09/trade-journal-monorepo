@@ -1,4 +1,4 @@
-package org.tradebook.journal.features.auth.dto;
+package org.tradebook.journal.features.auth.dto.request;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -9,8 +9,7 @@ import lombok.NoArgsConstructor;
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor
-public class RegisterRequest {
+public class LoginRequest {
     private String email;
     private String password;
-    private String currency; // "USD", "INR"
 }

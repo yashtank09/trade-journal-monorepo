@@ -1,4 +1,4 @@
-package org.tradebook.journal.features.auth.dto;
+package org.tradebook.journal.features.auth.dto.response;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
