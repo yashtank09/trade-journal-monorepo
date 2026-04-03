@@ -50,6 +50,9 @@ spring:
       max-request-size: 10MB
       file-size-threshold: 1MB
 
+  liquibase:
+    change-log: classpath:/db/changelog/db.changelog-master.xml
+
 # -------------------------
 # Logging Configuration
 # -------------------------
