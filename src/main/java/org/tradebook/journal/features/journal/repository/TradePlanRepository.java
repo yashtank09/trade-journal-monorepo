@@ -8,5 +8,5 @@ import java.util.List;
 
 @Repository
 public interface TradePlanRepository extends JpaRepository<TradePlan, Long> {
-    List<TradePlan> findByTradeId(Long tradeId);
+    List<TradePlan> findByTradeSummaryId(Long tradeSummaryId);
 }

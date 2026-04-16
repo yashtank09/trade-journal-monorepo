@@ -19,7 +19,7 @@ public class TradePlanServiceImpl implements TradePlanService {
     }
 
     @Override
-    public List<TradePlan> findByTradeId(Long tradeId) {
-        return tradePlanRepository.findByTradeId(tradeId);
+    public List<TradePlan> findByTradeSummaryId(Long tradeSummaryId) {
+        return tradePlanRepository.findByTradeSummaryId(tradeSummaryId);
     }
 }

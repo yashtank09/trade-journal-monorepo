@@ -37,8 +37,8 @@ public class TradeBookMasterController {
     }
 
     @GetMapping("/trade-plans")
-    public ResponseEntity<List<TradePlan>> getTradePlans(@RequestParam Long tradeId) {
-        List<TradePlan> tradePlans = tradePlanService.findByTradeId(tradeId);
+    public ResponseEntity<List<TradePlan>> getTradePlans(@RequestParam Long tradeSummaryId) {
+        List<TradePlan> tradePlans = tradePlanService.findByTradeSummaryId(tradeSummaryId);
         return ResponseEntity.ok(tradePlans);
     }
 }

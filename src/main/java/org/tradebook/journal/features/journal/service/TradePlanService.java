@@ -5,5 +5,5 @@ import java.util.List;
 
 public interface TradePlanService {
     TradePlan save(TradePlan tradePlan);
-    List<TradePlan> findByTradeId(Long tradeId);
+    List<TradePlan> findByTradeSummaryId(Long tradeSummaryId);
 }

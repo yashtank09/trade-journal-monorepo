@@ -47,10 +47,11 @@ public class TradeServiceImpl implements TradeService {
         Trade trade = Trade.builder().user(user).instrument(instrument).tradeDate(tradeDate).direction(request.getDirection()).quantity(request.getQuantity()).entryPrice(request.getEntryPrice()).entryTime(entryTime).status("OPEN").build();
         trade = tradeRepository.save(trade);
 
-        if (request.getPlan() != null) {
-            TradePlan plan = TradePlan.builder().trade(trade).targetPrice(request.getPlan().getTargetPrice()).stopLoss(request.getPlan().getStopLoss()).setupReason(request.getPlan().getSetupNote()).build();
-            tradePlanRepository.save(plan);
-        }
+        // Deprecated flow: TradePlan now attaches to TradeSummary
+        // if (request.getPlan() != null) {
+        //     TradePlan plan = TradePlan.builder().trade(trade).targetPrice(request.getPlan().getTargetPrice()).stopLoss(request.getPlan().getStopLoss()).setupReason(request.getPlan().getSetupNote()).build();
+        //     tradePlanRepository.save(plan);
+        // }
 
         return mapToDetailResponse(trade);
     }
@@ -106,7 +107,7 @@ public class TradeServiceImpl implements TradeService {
     }
 
     private TradeDetailResponse mapToDetailResponse(Trade trade) {
-        Optional<TradePlan> planOpt = tradePlanRepository.findByTradeId(trade.getId()).stream().findFirst();
+        Optional<TradePlan> planOpt = Optional.empty(); // Deprecated relation
         return TradeDetailResponse.builder()
                 .id(trade.getId())
                 .symbol(trade.getInstrument().getSymbol())
@@ -130,7 +131,7 @@ public class TradeServiceImpl implements TradeService {
     }
 
     private TradeSummaryResponse mapToSummaryResponse(Trade trade) {
-        Optional<TradePlan> planOpt = tradePlanRepository.findByTradeId(trade.getId()).stream().findFirst();
+        Optional<TradePlan> planOpt = Optional.empty(); // Deprecated relation
         return TradeSummaryResponse.builder()
                 .id(trade.getId())
                 .symbol(trade.getInstrument().getSymbol())
