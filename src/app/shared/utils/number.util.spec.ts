@@ -1,4 +1,4 @@
-import { Number } from './numberutil';
+import { Number } from './number.util';
 
 describe('Number', () => {
   it('should create an instance', () => {

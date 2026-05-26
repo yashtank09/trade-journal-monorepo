@@ -74,4 +74,19 @@ export class AuthService {
     getToken(): string | null {
         return localStorage.getItem('authToken');
     }
+
+    getDecodedToken(): any {
+        const token = this.getToken();
+        if (!token) return null;
+        try {
+            return JSON.parse(atob(token.split('.')[1]));
+        } catch {
+            return null;
+        }
+    }
+
+    getUserRole(): string | null {
+        const decoded = this.getDecodedToken();
+        return decoded ? decoded.role : null;
+    }
 }

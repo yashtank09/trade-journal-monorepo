@@ -3,23 +3,28 @@ import { ReactiveFormsModule } from '@angular/forms';
 import { HttpClientTestingModule } from '@angular/common/http/testing';
 import { FileUploadComponent } from './file-upload.component';
 import { FileUploadService } from '../../services/file-upload.service';
+import { MessageService } from 'primeng/api';
+import { vi } from 'vitest';
 
 describe('FileUploadComponent', () => {
   let component: FileUploadComponent;
   let fixture: ComponentFixture<FileUploadComponent>;
-  let mockFileUploadService: jasmine.SpyObj<FileUploadService>;
+  let mockFileUploadService: any;
 
   beforeEach(async () => {
-    const spy = jasmine.createSpyObj('FileUploadService', ['uploadFile']);
+    const spy = {
+      uploadFile: vi.fn()
+    };
 
     await TestBed.configureTestingModule({
       imports: [FileUploadComponent, ReactiveFormsModule, HttpClientTestingModule],
       providers: [
-        { provide: FileUploadService, useValue: spy }
+        { provide: FileUploadService, useValue: spy },
+        { provide: MessageService, useValue: { add: vi.fn() } }
       ]
     }).compileComponents();
 
-    mockFileUploadService = TestBed.inject(FileUploadService) as jasmine.SpyObj<FileUploadService>;
+    mockFileUploadService = TestBed.inject(FileUploadService);
     fixture = TestBed.createComponent(FileUploadComponent);
     component = fixture.componentInstance;
     fixture.detectChanges();
@@ -32,7 +37,6 @@ describe('FileUploadComponent', () => {
   it('should initialize form with default values', () => {
     expect(component.uploadForm).toBeDefined();
     expect(component.uploadForm.get('fileType')?.value).toBe('CSV');
-    expect(component.uploadForm.get('sourceSystem')?.value).toBe('UI');
     expect(component.uploadForm.get('fileCategory')?.value).toBe('TRADE_BOOK');
   });
 
@@ -60,7 +64,6 @@ describe('FileUploadComponent', () => {
     component.selectedFile = new File(['test'], 'test.csv', { type: 'text/csv' });
     component.uploadForm.patchValue({
       fileType: 'EXCEL',
-      sourceSystem: 'API',
       description: 'Test description',
       fileCategory: 'PORTFOLIO'
     });
@@ -69,13 +72,12 @@ describe('FileUploadComponent', () => {
 
     expect(component.selectedFile).toBeNull();
     expect(component.uploadForm.get('fileType')?.value).toBe('CSV');
-    expect(component.uploadForm.get('sourceSystem')?.value).toBe('UI');
     expect(component.uploadForm.get('description')?.value).toBe('');
     expect(component.uploadForm.get('fileCategory')?.value).toBe('TRADE_BOOK');
   });
 
   it('should not submit when form is invalid', () => {
-    spyOn(component, 'onSubmit').and.callThrough();
+    vi.spyOn(component, 'onSubmit');
     
     component.uploadForm.markAllAsTouched();
     component.onSubmit();
@@ -89,22 +91,21 @@ describe('FileUploadComponent', () => {
     component.uploadForm.patchValue({
       file: mockFile,
       fileType: 'CSV',
-      sourceSystem: 'UI',
       description: 'Test Upload',
       fileCategory: 'TRADE_BOOK'
     });
 
-    mockFileUploadService.uploadFile.and.returnValue({
+    mockFileUploadService.uploadFile.mockReturnValue({
       subscribe: () => {}
     } as any);
 
     component.onSubmit();
 
     expect(mockFileUploadService.uploadFile).toHaveBeenCalledWith(mockFile, {
-      fileType: 'CSV',
-      sourceSystem: 'UI',
+      'file-type': 'CSV',
+      'source-system': 'USER_INTERFACE',
       description: 'Test Upload',
-      fileCategory: 'TRADE_BOOK'
+      'file-category': 'TRADE_BOOK'
     });
   });
 });

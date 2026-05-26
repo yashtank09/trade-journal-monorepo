@@ -1,6 +1,7 @@
 import {Routes} from '@angular/router';
 import {AuthGuard} from './core/guards/auth.guard';
 import {PublicGuard} from './core/guards/public.guard';
+import {AdminGuard} from './core/guards/admin.guard';
 import {LayoutComponent} from './shared/components/layout/layout';
 
 export const routes: Routes = [
@@ -30,6 +31,11 @@ export const routes: Routes = [
             {
                 path: 'analytics',
                 loadChildren: () => import('./features/analytics/analytics.routes').then(m => m.routes)
+            },
+            {
+                path: 'admin',
+                loadChildren: () => import('./features/admin/admin.routes').then(m => m.routes),
+                canActivate: [AdminGuard]
             }
         ]
     },

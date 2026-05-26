@@ -1,4 +1,4 @@
-import { Pnl } from './pnlutil';
+import { Pnl } from './pnl.util';
 
 describe('Pnl', () => {
   it('should create an instance', () => {
