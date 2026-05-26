@@ -116,6 +116,10 @@ security:
   jwt:
     secret-key: ${SECURITY_JWT_SECRET_KEY:ThisIsADefaultKeyForDevelopmentOnlyPleaseChangeInProductionToASecureHexKey}
     expiration-ms: 86400000
+  endpoint-config:
+    # How often (ms) to refresh the in-memory path cache from the DB.
+    # Default: 60 000 ms (1 minute). Changes in the DB take effect within this window.
+    cache-refresh-ms: ${SECURITY_CONFIG_CACHE_REFRESH_MS:60000}
 
 tradebook:
   application:

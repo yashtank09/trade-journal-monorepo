@@ -16,6 +16,9 @@ import org.tradebook.journal.features.auth.dto.request.RegisterRequest;
 import org.tradebook.journal.features.auth.entity.User;
 import org.tradebook.journal.features.auth.repository.UserRepository;
 
+import java.util.HashMap;
+import java.util.Map;
+
 import static org.tradebook.journal.features.auth.AuthConstants.MSG_EMAIL_IN_USE;
 
 @Service
@@ -43,14 +46,22 @@ public class AuthService {
 
         // Generate token for immediate login
         UserDetails userDetails = userDetailsService.loadUserByUsername(user.getEmail());
-        var jwtToken = jwtService.generateToken(userDetails);
+        Map<String, Object> extraClaims = new HashMap<>();
+        extraClaims.put("role", "ROLE_" + user.getRole().name());
+        var jwtToken = jwtService.generateToken(extraClaims, userDetails);
         return AuthResponse.builder().token(jwtToken).build();
     }
 
     public AuthResponse authenticate(LoginRequest request) {
         authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(request.getUserName(), request.getPassword()));
         var userDetails = userDetailsService.loadUserByUsername(request.getUserName());
-        var jwtToken = jwtService.generateToken(userDetails);
+        
+        var user = repository.findByEmail(request.getUserName())
+                .orElseThrow(() -> new RuntimeException("User not found: " + request.getUserName()));
+
+        Map<String, Object> extraClaims = new HashMap<>();
+        extraClaims.put("role", "ROLE_" + user.getRole().name());
+        var jwtToken = jwtService.generateToken(extraClaims, userDetails);
         return AuthResponse.builder().token(jwtToken).build();
     }
 

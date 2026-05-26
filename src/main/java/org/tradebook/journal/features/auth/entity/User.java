@@ -3,6 +3,7 @@ package org.tradebook.journal.features.auth.entity;
 import jakarta.persistence.*;
 import lombok.*;
 import org.tradebook.journal.common.entity.BaseEntity;
+import org.tradebook.journal.features.auth.enums.Role;
 
 @Entity
 @Table(name = "users")
@@ -26,4 +27,10 @@ public class User extends BaseEntity {
 
     @Column(length = 3, nullable = false)
     private String currency; // USD, INR, etc.
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "role", nullable = false, length = 20)
+    @Builder.Default
+    private Role role = Role.USER;
 }
+

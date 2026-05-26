@@ -1,0 +1,13 @@
+.git
+.gitignore
+.idea
+.vscode
+target
+logs
+uploads
+*.log
+README.md
+CHANGELOG.md
+.mvn
+mvnw
+mvnw.cmd

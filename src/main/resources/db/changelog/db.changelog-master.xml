@@ -5,6 +5,10 @@
     xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
         http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd">
 
-    <!-- Baseline schemas will be generated here in Phase 2/3 -->
+    <!-- Security endpoint config table + seed data -->
+    <include file="classpath:/db/changelog/v1__create_security_endpoint_configs.xml"/>
+
+    <!-- CORS policies table + seed data -->
+    <include file="classpath:/db/changelog/v2__create_cors_policies.xml"/>
 
 </databaseChangeLog>
