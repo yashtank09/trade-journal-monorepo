@@ -1,0 +1,413 @@
+<div [ngStyle]="{ 'min-height': '100vh', 'background': C.bg, 'font-family': 'DM Sans, sans-serif' }"
+     class="trade-summary-container">
+
+
+    <!-- Main Content -->
+    <main class="main-content">
+        <!-- Page Title -->
+        <div class="page-header">
+            <div class="header-content">
+                <div class="title-section">
+                    <div class="title-wrapper">
+                        <h1 class="page-title">
+                            <i class="pi pi-table title-icon"></i>
+                            Trade Summary
+                        </h1>
+                        <div class="title-badge">
+                            <span class="badge-dot"></span>
+                            {{ filtered().length }} of {{ trades().length }} trades
+                        </div>
+                    </div>
+                    <p class="page-subtitle">Sorted by date · {{ getCurrentDateString() }}</p>
+                </div>
+                <div class="header-actions">
+                    <button (click)="showUploadModal()" class="btn-secondary">
+                        <i class="pi pi-upload btn-icon"></i>
+                        <span class="btn-text">Upload File</span>
+                    </button>
+                    <button (click)="addTrade()" class="btn-primary">
+                        <i class="pi pi-plus btn-icon"></i>
+                        <span class="btn-text">Log Trade</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Summary Cards -->
+        <div class="summary-cards">
+            @for (stat of summaryStats(); track stat.label) {
+                <div [attr.data-stat]="stat.label" class="summary-card">
+                    <div class="card-header">
+                        <i [class]="getStatIcon(stat.label) + ' card-icon'"></i>
+                        <span class="card-label">{{ stat.label }}</span>
+                    </div>
+                    <div class="card-content">
+                        <p [ngStyle]="{ 'color': stat.color || C.ink }"
+                           class="card-value">
+                            {{ stat.value }}
+                        </p>
+                        @if (getStatChange(stat.label)) {
+                            <span class="card-change positive">+12.5%</span>
+                        }
+                    </div>
+                </div>
+            }
+        </div>
+
+        <!-- Filters Section -->
+        <div class="filters-container compact">
+            <div class="filters-header">
+                <h3 class="filters-title">Filters & Search</h3>
+                <button (click)="clearFilters()" [disabled]="isDefaultFilters()" class="btn-clear">
+                    Clear
+                </button>
+            </div>
+
+            <div class="filters-content">
+                <div class="search-section">
+                    <div class="search-wrapper">
+                        <i class="pi pi-search search-icon"></i>
+                        <input
+                                #globalFilter
+                                (input)="onGlobalFilter(dt, $event)"
+                                class="search-input"
+                                placeholder="Search trades..."
+                                type="text"
+                        >
+                        @if (search()) {
+                            <button (click)="clearFilters(); globalFilter.value = ''" class="search-clear">×</button>
+                        }
+                    </div>
+                </div>
+
+                <div class="filter-groups">
+                    <div class="filter-group">
+                        <div class="group-label">
+                            <i class="pi pi-sort-alt group-icon"></i>
+                            Direction
+                        </div>
+                        <div class="filter-chips">
+                            <button
+                                    (click)="onTypeFilterChange('ALL')"
+                                    [class]="filters().type === 'ALL' ? 'chip-active' : 'chip-inactive'"
+                                    class="chip"
+                            >All
+                            </button>
+                            <button
+                                    (click)="onTypeFilterChange('LONG')"
+                                    [class]="filters().type === 'LONG' ? 'chip-active chip-green' : 'chip-inactive'"
+                                    class="chip"
+                            ><i class="pi pi-arrow-up chip-dir-icon"></i> Long
+                            </button>
+                            <button
+                                    (click)="onTypeFilterChange('SHORT')"
+                                    [class]="filters().type === 'SHORT' ? 'chip-active chip-amber' : 'chip-inactive'"
+                                    class="chip"
+                            ><i class="pi pi-arrow-down chip-dir-icon"></i> Short
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="filter-group">
+                        <div class="group-label">
+                            <i class="pi pi-list group-icon"></i>
+                            Status
+                        </div>
+                        <div class="filter-chips">
+                            <button
+                                    (click)="onStatusFilterChange('ALL')"
+                                    [class]="filters().status === 'ALL' ? 'chip-active' : 'chip-inactive'"
+                                    class="chip"
+                            >All
+                            </button>
+                            <button
+                                    (click)="onStatusFilterChange('OPEN')"
+                                    [class]="filters().status === 'OPEN' ? 'chip-active chip-amber' : 'chip-inactive'"
+                                    class="chip"
+                            >Open
+                            </button>
+                            <button
+                                    (click)="onStatusFilterChange('CLOSED')"
+                                    [class]="filters().status === 'CLOSED' ? 'chip-active chip-green' : 'chip-inactive'"
+                                    class="chip"
+                            >Closed
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="filter-group">
+                        <div class="group-label">
+                            <i class="pi pi-calendar group-icon"></i>
+                            Time Period
+                        </div>
+                        <div class="filter-chips">
+                            <button
+                                    (click)="onDateFilterChange('ALL')"
+                                    [class]="filters().date === 'ALL' ? 'chip-active' : 'chip-inactive'"
+                                    class="chip"
+                            >All Time
+                            </button>
+                            <button
+                                    (click)="onDateFilterChange('TODAY')"
+                                    [class]="filters().date === 'TODAY' ? 'chip-active' : 'chip-inactive'"
+                                    class="chip"
+                            >Today
+                            </button>
+                            <button
+                                    (click)="onDateFilterChange('WEEK')"
+                                    [class]="filters().date === 'WEEK' ? 'chip-active' : 'chip-inactive'"
+                                    class="chip"
+                            >This Week
+                            </button>
+                            <button
+                                    (click)="onDateFilterChange('MONTH')"
+                                    [class]="filters().date === 'MONTH' ? 'chip-active' : 'chip-inactive'"
+                                    class="chip"
+                            >This Month
+                            </button>
+                            <p-datepicker
+                                [(ngModel)]="dateRange"
+                                selectionMode="range"
+                                [readonlyInput]="true"
+                                placeholder="Select Custom Range"
+                                (ngModelChange)="onDateRangeChange($event)"
+                                styleClass="custom-range-picker"
+                                appendTo="body"
+                            ></p-datepicker>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+
+
+        <!-- PrimeNG Table -->
+        <p-table 
+            #dt
+            [value]="filtered()" 
+            [paginator]="true" 
+            [rows]="rows()" 
+            [first]="first()"
+            [totalRecords]="filtered().length"
+            [rowsPerPageOptions]="[7, 14, 21]"
+            [showCurrentPageReport]="true"
+            currentPageReportTemplate="Showing {first} to {last} of {totalRecords} trades"
+            [lazy]="false"
+            (onPage)="onPageChange($event)"
+            [globalFilterFields]="globalFilterFields"
+            [scrollable]="true"
+            scrollHeight="flex"
+            [style]="{'border-radius': '20px', 'overflow': 'hidden'}"
+            tableStyleClass="trade-table"
+        >
+            <!-- Header -->
+            <ng-template pTemplate="header">
+                <tr>
+                    <th style="width: 12%" pSortableColumn="openedAt">Date & Time <p-sortIcon field="openedAt"></p-sortIcon></th>
+                    <th style="width: 20%" pSortableColumn="symbol">Instrument <p-sortIcon field="symbol"></p-sortIcon></th>
+                    <th style="width: 12%" pSortableColumn="direction">Type <p-sortIcon field="direction"></p-sortIcon></th>
+                    <th style="width: 12%" pSortableColumn="entryAvgPrice">Entry <p-sortIcon field="entryAvgPrice"></p-sortIcon></th>
+                    <th style="width: 12%" pSortableColumn="exitAvgPrice">Exit <p-sortIcon field="exitAvgPrice"></p-sortIcon></th>
+                    <th style="width: 10%" pSortableColumn="entryQty">Qty <p-sortIcon field="entryQty"></p-sortIcon></th>
+                    <th style="width: 12%" pSortableColumn="realizedPnl">Net P&L <p-sortIcon field="realizedPnl"></p-sortIcon></th>
+                    <th style="width: 10%" pSortableColumn="positionStatus">Status <p-sortIcon field="positionStatus"></p-sortIcon></th>
+                </tr>
+            </ng-template>
+
+            <!-- Body -->
+            <ng-template pTemplate="body" let-trade>
+                <tr [class.selected-row]="selected()?.id === trade.id" (click)="selectTrade(trade)">
+                    <!-- Date & Time -->
+                    <td>
+                        <div class="datetime-cell">
+                            <p class="date">{{ trade.openedAt.split('T')[0] }}</p>
+                            <p class="time">{{ trade.openedAt.split('T')[1].substring(0, 5) }}</p>
+                        </div>
+                    </td>
+
+                    <!-- Instrument -->
+                    <td>
+                        <div class="instrument-cell">
+                            <p class="instrument-name">{{ trade.symbol }}</p>
+                        </div>
+                    </td>
+
+                    <!-- Type Badge -->
+                    <td>
+                        <span [class]="'dir-badge dir-badge--' + (trade.direction === 'LONG' ? 'long' : 'short')">
+                            <i [class]="'pi ' + (trade.direction === 'LONG' ? 'pi-arrow-up' : 'pi-arrow-down')"></i>
+                            {{ trade.direction }}
+                        </span>
+                    </td>
+
+                    <!-- Entry Price -->
+                    <td class="text-right">
+                        <span class="price-cell">₹{{ trade.entryAvgPrice.toLocaleString('en-IN') }}</span>
+                    </td>
+
+                    <!-- Exit Price -->
+                    <td class="text-right">
+                        @if (trade.positionStatus === 'CLOSED') {
+                            <span class="price-cell">₹{{ trade.exitAvgPrice.toLocaleString('en-IN') }}</span>
+                        } @else {
+                            <span class="placeholder">—</span>
+                        }
+                    </td>
+
+                    <!-- Quantity -->
+                    <td class="text-center">
+                        <span class="qty-cell">{{ trade.entryQty }}</span>
+                    </td>
+
+                    <!-- Net P&L -->
+                    <td class="text-right">
+                        @if (trade.positionStatus === 'CLOSED') {
+                            <span [style]="pnlStyle(trade.realizedPnl)" class="pnl-cell">
+                                {{ fmtPnl(trade.realizedPnl) }}
+                            </span>
+                        } @else {
+                            <p-tag value="OPEN" severity="info" [rounded]="true"></p-tag>
+                        }
+                    </td>
+
+                    <!-- Status -->
+                    <td class="text-center">
+                        <p-tag 
+                            [value]="trade.positionStatus"
+                            [severity]="trade.positionStatus === 'CLOSED' ? 'success' : 'info'"
+                            [rounded]="true"
+                        ></p-tag>
+                    </td>
+                </tr>
+            </ng-template>
+
+            <!-- Empty Message -->
+            <ng-template pTemplate="emptymessage">
+                <tr>
+                    <td colspan="8" class="text-center py-8">
+                        <div class="empty-state">
+                            <i class="pi pi-inbox empty-icon"></i>
+                            <p class="empty-title">No trades match your filters</p>
+                            <button (click)="clearFilters()" pButton label="Clear all filters" class="p-button-outlined"></button>
+                        </div>
+                    </td>
+                </tr>
+            </ng-template>
+        </p-table>
+
+        <!-- Helpful tip -->
+        <p class="help-tip"><i class="pi pi-info-circle"></i> Click any row to view full trade details</p>
+    </main>
+
+    <!-- Detail Panel -->
+    @if (selected()) {
+        <div (click)="closeDetails()" class="detail-panel-overlay"></div>
+        <div class="detail-panel">
+            <!-- Header -->
+            <div class="panel-header">
+                <div>
+                    <h2>{{ selected()!.symbol }}</h2>
+                    <div class="panel-badges">
+            <span [class.long]="selected()!.direction === 'LONG'" [class.short]="selected()!.direction === 'SHORT'"
+                  class="type-badge">
+              <i [class]="'pi ' + (selected()!.direction === 'LONG' ? 'pi-arrow-up' : 'pi-arrow-down')"></i>
+              {{ selected()!.direction }}
+            </span>
+                        <span [class.closed]="selected()!.positionStatus === 'CLOSED'"
+                              [class.open]="selected()!.positionStatus === 'OPEN'"
+                              class="status-badge">
+              {{ selected()!.positionStatus }}
+            </span>
+                    </div>
+                </div>
+                <div class="panel-actions">
+                    <button (click)="editTrade(selected()!)" class="btn-ghost">Edit</button>
+                    <button (click)="closeDetails()" class="btn-ghost">✕</button>
+                </div>
+            </div>
+
+            <!-- P&L Hero -->
+            <div [class.loss]="selected()!.realizedPnl < 0" [class.open]="selected()!.positionStatus === 'OPEN'"
+                 [class.profit]="selected()!.realizedPnl > 0"
+                 class="pnl-hero">
+                <p class="pnl-label">{{ selected()!.positionStatus === 'OPEN' ? 'Position Status' : 'Net P&L' }}</p>
+                <p class="pnl-amount">
+                    {{ selected()!.positionStatus === 'OPEN' ? 'OPEN' : fmtPnl(selected()!.realizedPnl) }}
+                </p>
+                @if (selected()!.positionStatus !== 'OPEN') {
+                    <p class="pnl-details">Entry ₹{{ selected()!.entryAvgPrice.toLocaleString('en-IN') }} → Exit
+                        ₹{{ selected()!.exitAvgPrice.toLocaleString('en-IN') }}</p>
+                }
+            </div>
+
+            <!-- Key Facts Grid -->
+            <div class="facts-grid">
+                @for (item of [
+                    ['Date', selected()!.openedAt.split('T')[0]],
+                    ['Time', selected()!.openedAt.split('T')[1].substring(0, 5)],
+                    ['Qty', selected()!.entryQty],
+                    ['Emotion', selected()!.emotion || '—']
+                ]; track item[0]) {
+                    <div class="fact-item">
+                        <p class="fact-label">{{ item[0] }}</p>
+                        <p class="fact-value">{{ item[1] }}</p>
+                    </div>
+                }
+            </div>
+
+            <!-- Trade Plan -->
+            @if (selected()!.plan) {
+                <div class="plan-section">
+                    <p class="section-title">Trade Plan</p>
+                    <div class="plan-content">
+                        <p>{{ selected()!.plan }}</p>
+                    </div>
+                </div>
+            }
+
+            <!-- Notes -->
+            @if (selected()!.notes) {
+                <div class="notes-section">
+                    <p class="section-title">Notes</p>
+                    <p class="notes-content">"{{ selected()!.notes }}"</p>
+                </div>
+            }
+
+            <!-- Tags -->
+            @if (selected()?.tags && selected()!.tags!.length > 0) {
+                <div class="tags-section">
+                    @for (tag of selected()!.tags; track tag) {
+                        <span class="tag">#{{ tag }}</span>
+                    }
+                </div>
+            }
+        </div>
+    }
+
+    <!-- Add/Edit Modal -->
+    @if (showForm()) {
+        <div (click)="closeForm()" class="modal-overlay">
+            <div (click)="$event.stopPropagation()" class="modal-card">
+                <h2>{{ editing() ? 'Edit Trade' : 'Log a Trade' }}</h2>
+                <p>Trade form functionality coming soon...</p>
+                <div class="form-actions">
+                    <button (click)="closeForm()" class="btn-ghost">Cancel</button>
+                </div>
+            </div>
+        </div>
+    }
+
+    <!-- File Upload Modal -->
+    @if (showUploadModalSignal()) {
+        <div (click)="closeUploadModal()" class="modal-overlay">
+            <div (click)="$event.stopPropagation()" class="modal-card upload-modal">
+                <div class="modal-header">
+                    <h2>Upload Trade File</h2>
+                    <button (click)="closeUploadModal()" class="close-btn">✕</button>
+                </div>
+                <app-file-upload (uploadSuccess)="onUploadSuccess()"></app-file-upload>
+            </div>
+        </div>
+    }
+</div>

@@ -1,0 +1,84 @@
+<div class="auth-container">
+    <div class="auth-card">
+        <!-- Logo -->
+        <div class="logo-section fade-up">
+            <div class="logo">
+            <i class="pi pi-chart-line" style="font-size: 1.5rem; color: #fff;"></i>
+            </div>
+            <h1>TradeJournal</h1>
+            <p>Sign in to view your trades</p>
+        </div>
+
+        <!-- Card -->
+        <div class="form-card fade-up-1">
+
+            <!-- API error -->
+            @if (apiError()) {
+                <div class="api-error">
+                    <i class="pi pi-exclamation-triangle"></i> {{ apiError() }}
+                </div>
+            }
+
+            <!-- Form -->
+            <form (ngSubmit)="submit()" [formGroup]="loginForm" class="form-fields">
+                <!-- Username -->
+                <div class="field-group fade-up-2">
+                    <label for="username">Username</label>
+                    <input [class.error]="isFieldInvalid('username')" autofocus class="field-input"
+                           formControlName="username"
+                           id="username" placeholder="e.g. trader_yash" type="text">
+                    @if (getErrorMessage('username')) {
+                        <p class="error-msg">! {{ getErrorMessage('username') }}</p>
+                    }
+                </div>
+
+
+                <!-- Password -->
+                <div class="field-group fade-up-3">
+                    <label for="password">Password</label>
+                    <div class="password-input">
+                        <input [class.error]="isFieldInvalid('password')" [type]="showPassword ? 'text' : 'password'"
+                               class="field-input"
+                               formControlName="password" id="password"
+                               placeholder="Your password">
+                        <button (click)="showPassword = !showPassword" class="password-toggle" type="button">
+                            <i [class]="showPassword ? 'pi pi-eye-slash' : 'pi pi-eye'"></i>
+                        </button>
+                    </div>
+                    @if (getErrorMessage('password')) {
+                        <p class="error-msg">! {{ getErrorMessage('password') }}</p>
+                    }
+                </div>
+
+
+                <!-- Forgot password -->
+                <div class="forgot-password">
+                    <button (click)="goToForgotPassword()" class="link-btn" type="button">Forgot password?</button>
+                </div>
+
+                <!-- Submit button -->
+                <div class="submit-section fade-up-4">
+                    <button [disabled]="loading()" class="btn-primary" type="submit">
+                        @if (loading()) {
+                            <span class="spinner"></span>
+                            Signing in…
+                        } @else {
+                            Sign In
+                        }
+                    </button>
+                </div>
+            </form>
+
+            <!-- Switch link -->
+            <p class="switch-link">
+                New to TradeJournal?
+                <button (click)="goToRegister()" class="link-btn">Create an account</button>
+            </p>
+        </div>
+
+        <!-- Footer note -->
+        <p class="footer-note">
+            Connects to Spring Boot · localhost:8085
+        </p>
+    </div>
+</div>
