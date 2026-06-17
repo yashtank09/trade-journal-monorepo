@@ -1,8 +1,8 @@
-import {Injectable} from '@angular/core';
-import {Router} from '@angular/router';
-import {Observable} from 'rxjs';
-import {tap} from 'rxjs/operators';
-import {ApiService} from '../../shared/service/api.service';
+import { Injectable } from '@angular/core';
+import { Router } from '@angular/router';
+import { Observable } from 'rxjs';
+import { tap } from 'rxjs/operators';
+import { ApiService } from '../../shared/service/api.service';
 
 export interface LoginRequest {
     username: string;
@@ -11,6 +11,8 @@ export interface LoginRequest {
 
 export interface RegisterRequest {
     username: string;
+    firstName: string;
+    lastName: string;
     email: string;
     password: string;
     currency: string;
@@ -41,6 +43,7 @@ export class AuthService {
     login(credentials: LoginRequest): Observable<AuthResponse> {
         return this.apiService.post<AuthResponse>(`${this.AUTH_ENDPOINT}/login`, credentials).pipe(
             tap(result => {
+                console.log(result);
                 if (result.status === 'success') {
                     localStorage.setItem('authToken', result.token);
                 }
@@ -73,5 +76,28 @@ export class AuthService {
 
     getToken(): string | null {
         return localStorage.getItem('authToken');
+    }
+
+    getDecodedToken(): any {
+        const token = this.getToken();
+        if (!token) return null;
+        try {
+            return JSON.parse(atob(token.split('.')[1]));
+        } catch {
+            return null;
+        }
+    }
+
+    getUserRole(): string | null {
+        const decoded = this.getDecodedToken();
+        return decoded ? decoded.role : null;
+    }
+
+    forgotPassword(email: string): Observable<any> {
+        return this.apiService.post<any>(`${this.AUTH_ENDPOINT}/forgot-password`, { email });
+    }
+
+    resetPassword(token: string, newPassword: string): Observable<any> {
+        return this.apiService.post<any>(`${this.AUTH_ENDPOINT}/reset-password`, { token, newPassword });
     }
 }

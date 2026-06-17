@@ -1,0 +1,195 @@
+<div class="admin-container" [ngStyle]="{ 'background': C.bg }">
+  <!-- Page Header -->
+  <header class="page-header">
+    <div class="header-left">
+      <h1 class="page-title">
+        <i class="pi pi-shield title-icon"></i>
+        Security Filters
+      </h1>
+      <p class="page-subtitle">Configure endpoint paths and dynamic access rules at runtime.</p>
+    </div>
+    <div class="header-right">
+      <button class="btn btn-secondary" (click)="triggerReload()" [disabled]="isReloading() || isLoading()">
+        <i class="pi pi-refresh" [class.spin]="isReloading()"></i>
+        <span>Reload Config</span>
+      </button>
+      <button class="btn btn-primary" (click)="openAddModal()">
+        <i class="pi pi-plus"></i>
+        <span>Add Rule</span>
+      </button>
+    </div>
+  </header>
+
+  <!-- Main Content Board -->
+  <main class="configs-board">
+    <!-- Quick Stats -->
+    <div class="stats-grid">
+      <div class="stat-card">
+        <div class="stat-icon-wrapper public">
+          <i class="pi pi-eye"></i>
+        </div>
+        <div class="stat-info">
+          <span class="stat-label">Public Paths</span>
+          <span class="stat-value">{{ getAccessLevelCount('PUBLIC') }}</span>
+        </div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-icon-wrapper user">
+          <i class="pi pi-user"></i>
+        </div>
+        <div class="stat-info">
+          <span class="stat-label">User Authenticated</span>
+          <span class="stat-value">{{ getAccessLevelCount('USER') }}</span>
+        </div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-icon-wrapper admin">
+          <i class="pi pi-lock"></i>
+        </div>
+        <div class="stat-info">
+          <span class="stat-label">Admin Restricted</span>
+          <span class="stat-value">{{ getAccessLevelCount('ADMIN') }}</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Configuration Table -->
+    <div class="table-container shadow-md">
+      <p-table 
+        [value]="configs()" 
+        [loading]="isLoading()"
+        [paginator]="true" 
+        [rows]="10"
+        [showCurrentPageReport]="true"
+        currentPageReportTemplate="Showing {first} to {last} of {totalRecords} rules"
+        [style]="{'border-radius': '12px', 'overflow': 'hidden'}"
+      >
+        <ng-template pTemplate="header">
+          <tr>
+            <th style="width: 30%">URL Path Pattern</th>
+            <th style="width: 15%">Access Level</th>
+            <th style="width: 15%" class="text-center">Status</th>
+            <th style="width: 25%">Description</th>
+            <th style="width: 15%" class="text-center">Actions</th>
+          </tr>
+        </ng-template>
+
+        <ng-template pTemplate="body" let-cfg>
+          <tr>
+            <td>
+              <span class="path-badge font-mono">{{ cfg.path }}</span>
+            </td>
+            <td>
+              <span [class]="'access-badge ' + cfg.accessLevel.toLowerCase()">
+                {{ cfg.accessLevel }}
+              </span>
+            </td>
+            <td class="text-center">
+              <label class="switch">
+                <input type="checkbox" [checked]="cfg.isActive" (change)="toggleActive(cfg)">
+                <span class="slider round"></span>
+              </label>
+            </td>
+            <td>
+              <span class="text-ink-mid text-sm">{{ cfg.description || '—' }}</span>
+            </td>
+            <td class="text-center actions-cell">
+              <button class="btn-icon-only edit" (click)="openEditModal(cfg)" title="Edit rule">
+                <i class="pi pi-pencil"></i>
+              </button>
+              <button class="btn-icon-only delete" (click)="deleteConfig(cfg)" title="Delete rule">
+                <i class="pi pi-trash"></i>
+              </button>
+            </td>
+          </tr>
+        </ng-template>
+
+        <ng-template pTemplate="emptymessage">
+          <tr>
+            <td colspan="5" class="text-center py-8 text-ink-light">
+              <div class="empty-state">
+                <i class="pi pi-shield empty-icon"></i>
+                <p class="mt-2 text-base">No security rules found in database.</p>
+              </div>
+            </td>
+          </tr>
+        </ng-template>
+      </p-table>
+    </div>
+  </main>
+
+  <!-- Add/Edit Modal Overlay -->
+  @if (showModal()) {
+    <div class="modal-overlay" (click)="closeModal()">
+      <div class="modal-card" (click)="$event.stopPropagation()">
+        <div class="modal-header">
+          <h2>{{ editingConfig() ? 'Edit Access Rule' : 'Create Access Rule' }}</h2>
+          <button class="close-btn" (click)="closeModal()">✕</button>
+        </div>
+
+        <form [formGroup]="configForm" (ngSubmit)="saveConfig()" class="config-form">
+          <!-- Path -->
+          <div class="form-group">
+            <label for="path" class="form-label">URL Path Pattern *</label>
+            <input 
+              type="text" 
+              id="path" 
+              formControlName="path" 
+              class="form-input font-mono" 
+              placeholder="e.g. /api/v1/trades/**"
+              [class.error]="configForm.get('path')?.invalid && configForm.get('path')?.touched"
+            >
+            <div class="error-message" *ngIf="configForm.get('path')?.invalid && configForm.get('path')?.touched">
+              Path is required (max 500 chars)
+            </div>
+          </div>
+
+          <!-- Access Level -->
+          <div class="form-group">
+            <label for="accessLevel" class="form-label">Access Level *</label>
+            <select 
+              id="accessLevel" 
+              formControlName="accessLevel" 
+              class="form-select"
+            >
+              <option value="PUBLIC">PUBLIC (No authentication required)</option>
+              <option value="USER">USER (Any authenticated account)</option>
+              <option value="ADMIN">ADMIN (Admin authorization credentials)</option>
+            </select>
+          </div>
+
+          <!-- Active Toggle -->
+          <div class="form-group checkbox-group">
+            <input type="checkbox" id="isActive" formControlName="isActive" class="form-checkbox">
+            <label for="isActive" class="checkbox-label">Enable access filter rule immediately</label>
+          </div>
+
+          <!-- Description -->
+          <div class="form-group">
+            <label for="description" class="form-label">Description *</label>
+            <textarea 
+              id="description" 
+              formControlName="description" 
+              class="form-textarea" 
+              placeholder="Provide a reason or notes for this security mapping..."
+              [class.error]="configForm.get('description')?.invalid && configForm.get('description')?.touched"
+            ></textarea>
+            <div class="error-message" *ngIf="configForm.get('description')?.invalid && configForm.get('description')?.touched">
+              Description is required
+            </div>
+          </div>
+
+          <!-- Form Actions -->
+          <div class="form-actions">
+            <button type="submit" class="btn btn-primary" [disabled]="configForm.invalid">
+              Save Rule
+            </button>
+            <button type="button" class="btn btn-secondary" (click)="closeModal()">
+              Cancel
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  }
+</div>

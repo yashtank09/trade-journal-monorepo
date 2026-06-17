@@ -1,4 +1,4 @@
-import {Component, ElementRef, HostListener, inject, signal, ViewChild} from '@angular/core';
+import {Component, ElementRef, HostListener, inject, signal, ViewChild, OnInit} from '@angular/core';
 import {CommonModule} from '@angular/common';
 import {Router} from '@angular/router';
 import {AuthService} from '../../../features/auth/auth.service';
@@ -16,7 +16,7 @@ export interface NavItem {
     templateUrl: './header.html',
     styleUrl: './header.scss'
 })
-export class HeaderComponent {
+export class HeaderComponent implements OnInit {
     private router = inject(Router);
     private authService = inject(AuthService);
 
@@ -27,10 +27,28 @@ export class HeaderComponent {
     menuVisible = signal(false);
 
     navItems = signal<NavItem[]>([
-        {label: 'Dashboard', icon: '◈', route: '/dashboard', active: false},
-        {label: 'Trade Log', icon: '≡', route: '/journal', active: true},
-        {label: 'Analytics', icon: '∿', route: '/analytics', active: false}
+        {label: 'Journal', icon: 'pi pi-book', route: '/journal', active: true},
+        {label: 'Analytics', icon: 'pi pi-chart-bar', route: '/analytics', active: false},
+        {label: 'Data Importer', icon: 'pi pi-cloud-upload', route: '/trade/file-upload', active: false}
     ]);
+
+    ngOnInit() {
+        const role = this.authService.getUserRole();
+        if (role === 'ROLE_ADMIN') {
+            this.navItems.update(items => [
+                ...items,
+                {label: 'Admin Panel', icon: 'pi pi-shield', route: '/admin/security', active: false}
+            ]);
+        }
+
+        const decoded = this.authService.getDecodedToken();
+        if (decoded && decoded.sub) {
+            const email = decoded.sub;
+            const name = email.split('@')[0];
+            this.username.set(name);
+            this.userInitial.set(name.charAt(0).toUpperCase());
+        }
+    }
 
     constructor() {
     }

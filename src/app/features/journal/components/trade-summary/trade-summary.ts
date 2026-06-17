@@ -1,13 +1,19 @@
 import { Component, signal, computed, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { RouterModule } from '@angular/router';
+import { TableModule } from 'primeng/table';
+import { ButtonModule } from 'primeng/button';
+import { InputTextModule } from 'primeng/inputtext';
+import { TagModule } from 'primeng/tag';
+import { DatePickerModule } from 'primeng/datepicker';
 import { Trade, TradeFilters, SummaryStat } from '../../models/trade.model';
 import { TradeService } from '../../services/trade.service';
-import { SharedModule } from '../../../../shared/shared.module';
-
+import { FileUploadComponent } from '../file-upload/file-upload.component';
 @Component({
   selector: 'app-trade-summary',
-  imports: [CommonModule, FormsModule, SharedModule],
+  imports: [CommonModule, FormsModule, RouterModule, FileUploadComponent,
+    TableModule, ButtonModule, InputTextModule, TagModule, DatePickerModule],
   templateUrl: './trade-summary.html',
   styleUrl: './trade-summary.scss'
 })
@@ -23,27 +29,63 @@ export class TradeSummaryComponent {
 
   selected = signal<Trade | null>(null);
   showForm = signal(false);
+  showUploadModalSignal = signal(false);
   editing = signal<Trade | null>(null);
   search = signal('');
   filters = signal<TradeFilters>({ type: 'ALL', status: 'ALL', date: 'ALL' });
   page = signal(0);
+  dateRange = signal<Date[] | undefined>(undefined);
   readonly PAGE_SIZE = 7;
+
+  // PrimeNG Table properties
+  first = signal(0);
+  rows = signal(7);
+  globalFilterFields = ['symbol', 'direction', 'positionStatus'];
 
   private tradeService = inject(TradeService);
   trades = this.tradeService.getAllTrades();
 
-  constructor() {}
+  constructor() {
+    this.tradeService.loadTrades();
+  }
 
   filtered = computed(() => {
     return this.trades().filter(t => {
       const f = this.filters();
-      if (f.type !== 'ALL' && t.type !== f.type) return false;
-      if (f.status !== 'ALL' && t.status !== f.status) return false;
-      if (f.date === 'TODAY' && t.date !== '2026-03-01') return false;
-      if (f.date === 'WEEK' && t.date < '2026-02-24') return false;
-      if (this.search() && !t.instrument.toLowerCase().includes(this.search().toLowerCase())) return false;
+      // Map old properties to new API structure
+      const type = t.direction;
+      const status = t.positionStatus;
+      const tradeDate = new Date(t.openedAt.split('T')[0]);
+      const instrument = t.symbol;
+
+      if (f.type !== 'ALL' && type !== f.type) return false;
+      if (f.status !== 'ALL' && status !== f.status) return false;
+
+      // Enhanced date filtering
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+
+      if (f.date === 'TODAY') {
+        const todayDate = today.toISOString().split('T')[0];
+        if (t.openedAt.split('T')[0] !== todayDate) return false;
+      } else if (f.date === 'WEEK') {
+        const weekAgo = new Date(today);
+        weekAgo.setDate(weekAgo.getDate() - 7);
+        if (tradeDate < weekAgo) return false;
+      } else if (f.date === 'MONTH') {
+        const monthAgo = new Date(today);
+        monthAgo.setMonth(monthAgo.getMonth() - 1);
+        if (tradeDate < monthAgo) return false;
+      } else if (f.date === 'CUSTOM' && f.startDate && f.endDate) {
+        const start = new Date(f.startDate);
+        const end = new Date(f.endDate);
+        end.setHours(23, 59, 59, 999); // Include end date
+        if (tradeDate < start || tradeDate > end) return false;
+      }
+
+      if (this.search() && !instrument.toLowerCase().includes(this.search().toLowerCase())) return false;
       return true;
-    }).sort((a, b) => b.date.localeCompare(a.date));
+    }).sort((a, b) => b.openedAt.localeCompare(a.openedAt));
   });
 
   pages = computed(() => Math.ceil(this.filtered().length / this.PAGE_SIZE));
@@ -64,9 +106,9 @@ export class TradeSummaryComponent {
 
   summaryStats = computed((): SummaryStat[] => {
     const filtered = this.filtered();
-    const closed = filtered.filter(t => t.status === 'CLOSED');
-    const wins = closed.filter(t => t.netPnl! > 0);
-    const total = closed.reduce((s, t) => s + (t.netPnl || 0), 0);
+    const closed = filtered.filter(t => t.positionStatus === 'CLOSED');
+    const wins = closed.filter(t => t.realizedPnl > 0);
+    const total = closed.reduce((s, t) => s + t.realizedPnl, 0);
     const rate = closed.length ? Math.round(wins.length / closed.length * 100) : 0;
 
     return [
@@ -92,8 +134,11 @@ export class TradeSummaryComponent {
     this.page.set(0);
   }
 
-  onDateFilterChange(date: 'ALL' | 'TODAY' | 'WEEK') {
-    this.filters.update(current => ({ ...current, date }));
+  onDateFilterChange(date: 'ALL' | 'TODAY' | 'WEEK' | 'MONTH' | 'CUSTOM') {
+    if (date !== 'CUSTOM') {
+      this.dateRange.set(undefined);
+    }
+    this.filters.update(current => ({ ...current, date, startDate: undefined, endDate: undefined }));
     this.page.set(0);
   }
 
@@ -138,10 +183,39 @@ export class TradeSummaryComponent {
     this.page.set(newPage);
   }
 
+  // PrimeNG Table pagination methods
+  onPageChange(event: any) {
+    this.first.set(event.first);
+    this.rows.set(event.rows);
+    this.page.set(Math.floor(event.first / event.rows));
+  }
+
+  onGlobalFilter(table: any, event: Event) {
+    const value = (event.target as HTMLInputElement).value;
+    table.filterGlobal(value, 'contains');
+    this.search.set(value);
+  }
+
   clearFilters() {
     this.filters.set({ type: 'ALL', status: 'ALL', date: 'ALL' });
     this.search.set('');
+    this.dateRange.set(undefined);
     this.page.set(0);
+    this.first.set(0);
+  }
+
+  onDateRangeChange(dates: Date[] | null | undefined) {
+    if (dates) {
+      this.dateRange.set(dates);
+    } else {
+      this.dateRange.set(undefined);
+    }
+    if (dates && dates.length >= 2 && dates[0] && dates[1]) {
+      const startDate = new Date(dates[0].getTime() - (dates[0].getTimezoneOffset() * 60000)).toISOString().split('T')[0];
+      const endDate = new Date(dates[1].getTime() - (dates[1].getTimezoneOffset() * 60000)).toISOString().split('T')[0];
+      this.filters.update(current => ({ ...current, date: 'CUSTOM', startDate, endDate }));
+      this.page.set(0);
+    }
   }
 
   createArray(length: number): number[] {
@@ -150,11 +224,11 @@ export class TradeSummaryComponent {
 
   getStatIcon(label: string): string {
     switch (label) {
-      case 'Trades shown': return '📊';
-      case 'Net P&L': return '💰';
-      case 'Win rate': return '🎯';
-      case 'Wins / Losses': return '⚖️';
-      default: return '📈';
+      case 'Trades shown': return 'pi pi-chart-bar';
+      case 'Net P&L': return 'pi pi-indian-rupee';
+      case 'Win rate': return 'pi pi-percentage';
+      case 'Wins / Losses': return 'pi pi-chart-pie';
+      default: return 'pi pi-trending-up';
     }
   }
 
@@ -169,11 +243,25 @@ export class TradeSummaryComponent {
   }
 
   getCurrentDateString(): string {
-    return new Date().toLocaleDateString('en-US', { 
-      weekday: 'long', 
-      year: 'numeric', 
-      month: 'long', 
-      day: 'numeric' 
+    return new Date().toLocaleDateString('en-US', {
+      weekday: 'long',
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric'
     });
+  }
+
+  // Upload modal methods
+  showUploadModal() {
+    this.showUploadModalSignal.set(true);
+  }
+
+  closeUploadModal() {
+    this.showUploadModalSignal.set(false);
+  }
+
+  onUploadSuccess() {
+    this.closeUploadModal();
+    this.tradeService.loadTrades(); // Refresh trades after successful upload
   }
 }

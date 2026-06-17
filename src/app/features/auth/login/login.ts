@@ -90,7 +90,8 @@ export class LoginComponent {
             },
             error: (error) => {
                 console.error('Login error:', error);
-                this.apiError.set('An error occurred. Please try again.');
+                this.apiError.set(error.error?.message || 'An error occurred. Please try again.');
+                this.loading.set(false);
             },
             complete: () => {
                 this.loading.set(false);
@@ -102,5 +103,9 @@ export class LoginComponent {
 
     goToRegister() {
         this.router.navigate(['/auth/register']);
+    }
+
+    goToForgotPassword() {
+        this.router.navigate(['/auth/forgot-password']);
     }
 }

@@ -1,6 +1,8 @@
 import {Routes} from '@angular/router';
 import {AuthGuard} from './core/guards/auth.guard';
 import {PublicGuard} from './core/guards/public.guard';
+import {AdminGuard} from './core/guards/admin.guard';
+import {LayoutComponent} from './shared/components/layout/layout';
 
 export const routes: Routes = [
     {
@@ -10,18 +12,36 @@ export const routes: Routes = [
     },
     {
         path: 'auth',
-        loadChildren: () => import('./features/auth/auth-module').then(m => m.AuthModule),
+        loadChildren: () => import('./features/auth/auth.routes').then(m => m.routes),
         canActivate: [PublicGuard]
     },
     {
-        path: 'trade',
-        loadChildren: () => import('./features/ingestion/ingestion-module').then(m => m.IngestionModule),
-        canActivate: [AuthGuard]
-    },
-    {
-        path: 'journal',
-        loadChildren: () => import('./features/journal/journal-module').then(m => m.JournalModule),
-        canActivate: [AuthGuard]
+        path: '',
+        component: LayoutComponent,
+        canActivate: [AuthGuard],
+        children: [
+            {
+                path: 'trade',
+                loadChildren: () => import('./features/ingestion/ingestion.routes').then(m => m.routes)
+            },
+            {
+                path: 'journal',
+                loadChildren: () => import('./features/journal/journal.routes').then(m => m.routes)
+            },
+            {
+                path: 'analytics',
+                loadChildren: () => import('./features/analytics/analytics.routes').then(m => m.routes)
+            },
+            {
+                path: 'profile',
+                loadComponent: () => import('./features/profile/profile.component').then(m => m.UserProfileComponent)
+            },
+            {
+                path: 'admin',
+                loadChildren: () => import('./features/admin/admin.routes').then(m => m.routes),
+                canActivate: [AdminGuard]
+            }
+        ]
     },
     {
         path: '**',
