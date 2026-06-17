@@ -35,6 +35,24 @@
           }
         </div>
 
+        <!-- First Name -->
+        <div class="field-group fade-up-2">
+          <label for="firstName">First Name</label>
+          <input id="firstName" type="text" formControlName="firstName" class="field-input" [class.error]="isFieldInvalid('firstName')" placeholder="Your first name">
+          @if (getErrorMessage('firstName')) {
+            <p class="error-msg">! {{ getErrorMessage('firstName') }}</p>
+          }
+        </div>
+
+        <!-- Last Name -->
+        <div class="field-group fade-up-2">
+          <label for="lastName">Last Name</label>
+          <input id="lastName" type="text" formControlName="lastName" class="field-input" [class.error]="isFieldInvalid('lastName')" placeholder="Your last name">
+          @if (getErrorMessage('lastName')) {
+            <p class="error-msg">! {{ getErrorMessage('lastName') }}</p>
+          }
+        </div>
+
         <!-- Email -->
         <div class="field-group fade-up-2">
           <label for="email-address">Email Address</label>

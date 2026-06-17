@@ -1,0 +1,303 @@
+<div class="profile-container animate-fade-in">
+  
+  <!-- Enhanced Header -->
+  <div class="page-header">
+    <div class="header-content">
+      <div class="title-section">
+        <div class="title-wrapper">
+          <h2 class="page-title">
+            <i class="pi pi-user title-icon"></i> Account Settings
+          </h2>
+          <div class="title-badge">
+            <span class="badge-dot"></span>
+            {{ userProfile().role || 'Member' }}
+          </div>
+        </div>
+        <p class="page-subtitle">Manage your personal information, trading styles, and preferences.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Main Grid Content (Golden Ratio: Sidebar 38.2% | Main Form 61.8%) -->
+  <div class="layout-grid">
+    
+    <!-- Left Card: Profile & Status -->
+    <div class="layout-sidebar">
+      
+      <!-- Avatar Card -->
+      <div class="card-base text-center profile-card relative">
+        <!-- Status Badge -->
+        <div class="absolute top-4 right-4">
+          <span class="status-badge status-badge-success">
+            <i class="pi pi-verified mr-1"></i> Active
+          </span>
+        </div>
+
+        <div class="avatar-container relative mx-auto my-6 group" (click)="simulateAvatarUpload()">
+          <div class="avatar-large">
+            {{ avatarInitial() }}
+          </div>
+          <div class="avatar-overlay">
+            <i class="pi pi-camera text-xl"></i>
+            <span class="text-xs font-semibold mt-1">Change</span>
+          </div>
+        </div>
+
+        <h3 class="username-title">{{ userProfile().firstName }} {{ userProfile().lastName }}</h3>
+        <p class="email-subtitle">{{ userProfile().email }}</p>
+        <div class="role-badge-container">
+          <span class="role-chip">@{{ userProfile().username }}</span>
+        </div>
+
+        <hr class="card-divider" />
+
+        <!-- Account Stats -->
+        <div class="account-stats text-left">
+          <div class="stat-row">
+            <span class="stat-lbl"><i class="pi pi-calendar mr-2 text-slate-400"></i>Joined</span>
+            <span class="stat-val font-semibold">{{ userProfile().joinedDate }}</span>
+          </div>
+          <div class="stat-row">
+            <span class="stat-lbl"><i class="pi pi-shield mr-2 text-slate-400"></i>Security Level</span>
+            <span class="stat-val text-green font-semibold">High</span>
+          </div>
+          <div class="stat-row">
+            <span class="stat-lbl"><i class="pi pi-key mr-2 text-slate-400"></i>Auth Provider</span>
+            <span class="stat-val font-semibold">JWT Credentials</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Extra Help Card -->
+      <div class="card-base border-accent-indigo">
+        <h4 class="card-subtitle mb-2"><i class="pi pi-info-circle mr-2 text-indigo-500"></i>KYC & Validation Info</h4>
+        <p class="help-text text-sm leading-relaxed text-slate-500">
+          Your Permanent Account Number (PAN) is required for compliance and tax filing exports. Updates to your PAN will trigger a validation check matching Indian tax format standards.
+        </p>
+      </div>
+    </div>
+
+    <!-- Right Card: Form Settings -->
+    <div class="layout-main">
+      <div class="card-base">
+        <h3 class="form-section-title">
+          <i class="pi pi-id-card mr-2 text-emerald-600"></i> Profile Information
+        </h3>
+        <p class="form-section-subtitle mb-6">Update your account details and default preferences below.</p>
+
+        <form [formGroup]="profileForm" (ngSubmit)="saveChanges()" class="profile-form">
+          
+          <!-- First Name -->
+          <div class="field-group">
+            <label for="firstName">First Name <span class="text-rose-500">*</span></label>
+            <div class="input-with-icon">
+              <i class="pi pi-user input-icon"></i>
+              <input 
+                type="text" 
+                id="firstName" 
+                formControlName="firstName"
+                class="field-input" 
+                [class.error]="isFieldInvalid('firstName')"
+                placeholder="Enter first name"
+              />
+            </div>
+            @if (isFieldInvalid('firstName')) {
+              <p class="error-msg"><i class="pi pi-times-circle mr-1"></i>{{ getFieldError('firstName') }}</p>
+            }
+          </div>
+
+          <!-- Last Name -->
+          <div class="field-group">
+            <label for="lastName">Last Name <span class="text-rose-500">*</span></label>
+            <div class="input-with-icon">
+              <i class="pi pi-user input-icon"></i>
+              <input 
+                type="text" 
+                id="lastName" 
+                formControlName="lastName"
+                class="field-input" 
+                [class.error]="isFieldInvalid('lastName')"
+                placeholder="Enter last name"
+              />
+            </div>
+            @if (isFieldInvalid('lastName')) {
+              <p class="error-msg"><i class="pi pi-times-circle mr-1"></i>{{ getFieldError('lastName') }}</p>
+            }
+          </div>
+
+          <!-- Email Address (Read-only) -->
+          <div class="field-group">
+            <label for="email" class="email-label-container">
+              <span>Email Address</span>
+              <span class="verified-badge">
+                <i class="pi pi-check-circle"></i> Verified
+              </span>
+            </label>
+            <div class="input-with-icon email-disabled">
+              <i class="pi pi-envelope input-icon"></i>
+              <input 
+                type="email" 
+                id="email" 
+                formControlName="email"
+                class="field-input cursor-not-allowed"
+                placeholder="your.email@example.com"
+              />
+            </div>
+          </div>
+
+          <!-- Mobile Number -->
+          <div class="field-group">
+            <label for="mobileNumber">Mobile Number <span class="text-rose-500">*</span></label>
+            <div class="input-with-icon">
+              <i class="pi pi-phone input-icon"></i>
+              <input 
+                type="tel" 
+                id="mobileNumber" 
+                formControlName="mobileNumber"
+                class="field-input" 
+                [class.error]="isFieldInvalid('mobileNumber')"
+                placeholder="e.g. 9876543210"
+              />
+            </div>
+            @if (isFieldInvalid('mobileNumber')) {
+              <p class="error-msg"><i class="pi pi-times-circle mr-1"></i>{{ getFieldError('mobileNumber') }}</p>
+            }
+          </div>
+
+          <!-- PAN -->
+          <div class="field-group">
+            <label for="pan">Permanent Account Number (PAN) <span class="text-rose-500">*</span></label>
+            <div class="input-with-icon">
+              <i class="pi pi-id-card input-icon"></i>
+              <input 
+                type="text" 
+                id="pan" 
+                formControlName="pan"
+                class="field-input uppercase" 
+                (input)="onPanInput($event)"
+                [class.error]="isFieldInvalid('pan')"
+                placeholder="ABCDE1234F"
+                maxlength="10"
+              />
+            </div>
+            @if (isFieldInvalid('pan')) {
+              <p class="error-msg"><i class="pi pi-times-circle mr-1"></i>{{ getFieldError('pan') }}</p>
+            }
+          </div>
+
+          <!-- Default Currency Dropdown -->
+          <div class="field-group">
+            <label for="currency">Default Currency <span class="text-rose-500">*</span></label>
+            <div class="select-wrapper">
+              <i class="pi pi-wallet input-icon select-icon-left"></i>
+              <select 
+                id="currency" 
+                formControlName="currency"
+                class="field-input select-input"
+                [class.error]="isFieldInvalid('currency')"
+              >
+                <option value="" disabled>Select Currency</option>
+                @for (curr of currencies; track curr.code) {
+                  <option [value]="curr.code">{{ curr.code }} ({{ curr.symbol }}) - {{ curr.name }}</option>
+                }
+              </select>
+              <i class="pi pi-angle-down select-chevron"></i>
+            </div>
+            @if (isFieldInvalid('currency')) {
+              <p class="error-msg"><i class="pi pi-times-circle mr-1"></i>{{ getFieldError('currency') }}</p>
+            }
+          </div>
+
+          <!-- Trading Style Dropdown -->
+          <div class="field-group">
+            <label for="tradingStyle">Trading Style <span class="text-rose-500">*</span></label>
+            <div class="select-wrapper">
+              <i class="pi pi-chart-line input-icon select-icon-left"></i>
+              <select 
+                id="tradingStyle" 
+                formControlName="tradingStyle"
+                class="field-input select-input"
+                [class.error]="isFieldInvalid('tradingStyle')"
+              >
+                <option value="" disabled>Select Trading Style</option>
+                @for (style of tradingStyles; track style) {
+                  <option [value]="style">{{ style }}</option>
+                }
+              </select>
+              <i class="pi pi-angle-down select-chevron"></i>
+            </div>
+            @if (isFieldInvalid('tradingStyle')) {
+              <p class="error-msg"><i class="pi pi-times-circle mr-1"></i>{{ getFieldError('tradingStyle') }}</p>
+            }
+          </div>
+
+          <!-- Empty Grid Cell to maintain balance on desktop -->
+          <div class="field-group spacer-cell"></div>
+
+          <!-- Address Textarea (Spans 2 columns) -->
+          <div class="field-group col-span-2">
+            <label for="residentialAddress">Residential Address <span class="text-rose-500">*</span></label>
+            <div class="textarea-wrapper">
+              <i class="pi pi-map-marker input-icon textarea-icon"></i>
+              <textarea 
+                id="residentialAddress" 
+                formControlName="residentialAddress"
+                class="field-input textarea-input" 
+                [class.error]="isFieldInvalid('residentialAddress')"
+                rows="4"
+                placeholder="Enter your complete residential address details..."
+              ></textarea>
+            </div>
+            @if (isFieldInvalid('residentialAddress')) {
+              <p class="error-msg"><i class="pi pi-times-circle mr-1"></i>{{ getFieldError('residentialAddress') }}</p>
+            }
+          </div>
+
+          <!-- Actions Section (Spans 2 columns) -->
+          <div class="form-actions col-span-2">
+            <button 
+              type="button" 
+              (click)="cancelEdit()" 
+              class="btn-secondary"
+              [disabled]="isSaving() || profileForm.pristine"
+            >
+              <i class="pi pi-times mr-1"></i> Cancel
+            </button>
+            
+            <button 
+              type="submit" 
+              class="btn-primary" 
+              [disabled]="isSaving() || profileForm.invalid || profileForm.pristine"
+            >
+              @if (isSaving()) {
+                <i class="pi pi-spinner pi-spin mr-1"></i> Saving...
+              } @else {
+                <i class="pi pi-check mr-1"></i> Save Changes
+              }
+            </button>
+          </div>
+
+        </form>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Floating Toast Message -->
+  @if (showToast()) {
+    <div 
+      class="toast-notification" 
+      [class.toast-success]="toastType() === 'success'" 
+      [class.toast-error]="toastType() === 'error'"
+    >
+      <div class="toast-content">
+        <i class="pi" [class.pi-check-circle]="toastType() === 'success'" [class.pi-exclamation-triangle]="toastType() === 'error'"></i>
+        <span class="toast-message">{{ toastMessage() }}</span>
+      </div>
+      <button class="toast-close-btn" (click)="closeToast()">
+        <i class="pi pi-times"></i>
+      </button>
+    </div>
+  }
+
+</div>

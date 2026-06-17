@@ -33,6 +33,10 @@ export const routes: Routes = [
                 loadChildren: () => import('./features/analytics/analytics.routes').then(m => m.routes)
             },
             {
+                path: 'profile',
+                loadComponent: () => import('./features/profile/profile.component').then(m => m.UserProfileComponent)
+            },
+            {
                 path: 'admin',
                 loadChildren: () => import('./features/admin/admin.routes').then(m => m.routes),
                 canActivate: [AdminGuard]

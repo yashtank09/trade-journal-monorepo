@@ -6,6 +6,8 @@ import {AuthService, RegisterRequest} from '../auth.service';
 
 interface RegisterForm {
     username: FormControl<string | null>;
+    firstName: FormControl<string | null>;
+    lastName: FormControl<string | null>;
     email: FormControl<string | null>;
     password: FormControl<string | null>;
     confirm: FormControl<string | null>;
@@ -33,6 +35,8 @@ export class RegisterComponent {
     ) {
         this.registerForm = this.fb.group({
             username: ['', [Validators.required, Validators.minLength(3)]],
+            firstName: ['', [Validators.required]],
+            lastName: ['', [Validators.required]],
             email: ['', [Validators.required, Validators.email]],
             password: [
                 '',
@@ -103,6 +107,8 @@ export class RegisterComponent {
         const formValues = this.registerForm.value;
         const userData: RegisterRequest = {
             username: formValues.username!,
+            firstName: formValues.firstName!,
+            lastName: formValues.lastName!,
             email: formValues.email!,
             password: formValues.password!,
             currency: 'USD' // Default currency as per API requirement

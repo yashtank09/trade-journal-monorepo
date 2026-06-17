@@ -104,4 +104,8 @@ export class LoginComponent {
     goToRegister() {
         this.router.navigate(['/auth/register']);
     }
+
+    goToForgotPassword() {
+        this.router.navigate(['/auth/forgot-password']);
+    }
 }
