@@ -9,11 +9,12 @@ import lombok.NoArgsConstructor;
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor
-public class RegisterRequest {
-    private String email;
-    private String username;
-    private String password;
+public class UpdateProfileRequest {
     private String firstName;
     private String lastName;
-    private String currency; // "USD", "INR"
+    private String mobileNumber;
+    private String residentialAddress;
+    private String pan;
+    private String currency;
+    private String tradingStyle;
 }

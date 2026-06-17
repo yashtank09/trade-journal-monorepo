@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.24.xsd">
+
+    <changeSet id="5" author="tradebook">
+        <!-- Add new columns -->
+        <addColumn tableName="users">
+            <column name="username" type="VARCHAR(50)"/>
+            <column name="first_name" type="VARCHAR(100)"/>
+            <column name="last_name" type="VARCHAR(100)"/>
+        </addColumn>
+
+        <!-- Populate existing users with a default username derived from email -->
+        <update tableName="users">
+            <column name="username" valueComputed="SUBSTRING_INDEX(email, '@', 1)"/>
+            <where>username IS NULL</where>
+        </update>
+
+        <!-- If there are duplicate usernames after the previous step, append the ID to make them unique -->
+        <!-- In a strict environment, we'd do a more complex query, but this works for local/dev -->
+        <update tableName="users">
+            <column name="username" valueComputed="CONCAT(username, id)"/>
+            <where>
+                username IN (
+                    SELECT u.username FROM (SELECT username FROM users GROUP BY username HAVING COUNT(*) > 1) AS u
+                )
+            </where>
+        </update>
+
+        <!-- Now we can safely add the unique constraint -->
+        <addUniqueConstraint tableName="users" columnNames="username" constraintName="uc_users_username"/>
+        
+        <!-- Make username NOT NULL -->
+        <addNotNullConstraint tableName="users" columnName="username" columnDataType="VARCHAR(50)"/>
+    </changeSet>
+
+</databaseChangeLog>

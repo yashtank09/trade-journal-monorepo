@@ -50,6 +50,11 @@ spring:
       max-request-size: 10MB
       file-size-threshold: 1MB
 
+
+
+  thymeleaf:
+    check-template-location: false
+
   liquibase:
     change-log: classpath:/db/changelog/db.changelog-master.xml
 
@@ -124,3 +129,5 @@ security:
 tradebook:
   application:
     default-currency: "USD"
+    frontend-url: ${FRONTEND_URL:http://localhost:4300}
+    password-reset-token-expiry-minutes: ${PASSWORD_RESET_TOKEN_EXPIRY_MINUTES:15}

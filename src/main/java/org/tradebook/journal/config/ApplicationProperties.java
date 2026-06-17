@@ -9,4 +9,6 @@ import org.springframework.context.annotation.Configuration;
 @ConfigurationProperties(prefix = "tradebook.application")
 public class ApplicationProperties {
     private String defaultCurrency;
+    private String frontendUrl;
+    private int passwordResetTokenExpiryMinutes = 15;
 }

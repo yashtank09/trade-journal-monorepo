@@ -14,7 +14,12 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.tradebook.journal.config.security.AppUserDetails;
 import org.tradebook.journal.features.auth.repository.UserRepository;
 
+import org.springframework.scheduling.annotation.EnableAsync;
+import org.springframework.scheduling.annotation.EnableScheduling;
+
 @Configuration
+@EnableScheduling
+@EnableAsync
 @RequiredArgsConstructor
 public class ApplicationConfig {
 

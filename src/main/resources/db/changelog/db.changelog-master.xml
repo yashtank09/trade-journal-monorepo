@@ -11,4 +11,16 @@
     <!-- CORS policies table + seed data -->
     <include file="classpath:/db/changelog/v2__create_cors_policies.xml"/>
 
+    <!-- Password reset tokens table -->
+    <include file="classpath:/db/changelog/v3__create_password_reset_tokens.xml"/>
+
+    <!-- System configurations and email outbox tables -->
+    <include file="classpath:/db/changelog/v4__create_system_configurations_and_outbox.xml"/>
+
+    <!-- Add username, first_name, last_name to users table -->
+    <include file="classpath:/db/changelog/v5__add_extended_profile_fields.xml"/>
+
+    <!-- Add extended user profile and kyc fields to users table -->
+    <include file="classpath:/db/changelog/v6__add_profile_kyc_fields.xml"/>
+
 </databaseChangeLog>

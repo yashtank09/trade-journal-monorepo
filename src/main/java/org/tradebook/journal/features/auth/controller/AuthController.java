@@ -1,13 +1,17 @@
 package org.tradebook.journal.features.auth.controller;
 
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.tradebook.journal.common.dto.DataApiResponse;
 import org.tradebook.journal.features.auth.dto.response.AuthResponse;
+import org.tradebook.journal.features.auth.dto.request.ForgotPasswordRequest;
 import org.tradebook.journal.features.auth.dto.request.LoginRequest;
 import org.tradebook.journal.features.auth.dto.request.RegisterRequest;
+import org.tradebook.journal.features.auth.dto.request.ResetPasswordRequest;
 import org.tradebook.journal.features.auth.service.AuthService;
+import org.tradebook.journal.features.auth.service.PasswordResetService;
 
 import static org.tradebook.journal.common.constants.ApiConstants.*;
 import static org.tradebook.journal.features.auth.AuthConstants.*;
@@ -17,6 +21,7 @@ import static org.tradebook.journal.features.auth.AuthConstants.*;
 @RequiredArgsConstructor
 public class AuthController {
     private final AuthService service;
+    private final PasswordResetService passwordResetService;
 
     @PostMapping("/register")
     public ResponseEntity<DataApiResponse<AuthResponse>> register(@RequestBody RegisterRequest request) {
@@ -38,4 +43,18 @@ public class AuthController {
         }
         return ResponseEntity.ok(DataApiResponse.success(CODE_SUCCESS, MSG_LOGOUT_SUCCESS, null));
     }
+
+    @PostMapping("/forgot-password")
+    public ResponseEntity<DataApiResponse<Void>> forgotPassword(@Valid @RequestBody ForgotPasswordRequest request) {
+        passwordResetService.requestPasswordReset(request.getEmail());
+        // Always return success to prevent email enumeration
+        return ResponseEntity.ok(DataApiResponse.success(CODE_SUCCESS, MSG_FORGOT_PASSWORD_SUCCESS, null));
+    }
+
+    @PostMapping("/reset-password")
+    public ResponseEntity<DataApiResponse<Void>> resetPassword(@Valid @RequestBody ResetPasswordRequest request) {
+        passwordResetService.resetPassword(request.getToken(), request.getNewPassword());
+        return ResponseEntity.ok(DataApiResponse.success(CODE_SUCCESS, MSG_RESET_PASSWORD_SUCCESS, null));
+    }
 }
+
