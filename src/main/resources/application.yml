@@ -50,6 +50,14 @@ spring:
       max-request-size: 10MB
       file-size-threshold: 1MB
 
+
+
+  thymeleaf:
+    check-template-location: false
+
+  liquibase:
+    change-log: classpath:/db/changelog/db.changelog-master.xml
+
 # -------------------------
 # Logging Configuration
 # -------------------------
@@ -113,7 +121,13 @@ security:
   jwt:
     secret-key: ${SECURITY_JWT_SECRET_KEY:ThisIsADefaultKeyForDevelopmentOnlyPleaseChangeInProductionToASecureHexKey}
     expiration-ms: 86400000
+  endpoint-config:
+    # How often (ms) to refresh the in-memory path cache from the DB.
+    # Default: 60 000 ms (1 minute). Changes in the DB take effect within this window.
+    cache-refresh-ms: ${SECURITY_CONFIG_CACHE_REFRESH_MS:60000}
 
 tradebook:
   application:
     default-currency: "USD"
+    frontend-url: ${FRONTEND_URL:http://localhost:4300}
+    password-reset-token-expiry-minutes: ${PASSWORD_RESET_TOKEN_EXPIRY_MINUTES:15}

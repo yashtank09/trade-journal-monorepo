@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+    xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd">
+
+    <changeSet id="006-add-profile-kyc-fields" author="tradebook">
+        <!-- Add new columns for extended user profile and KYC -->
+        <addColumn tableName="users">
+            <column name="mobile_number" type="VARCHAR(15)"/>
+            <column name="residential_address" type="VARCHAR(255)"/>
+            <column name="pan" type="VARCHAR(10)"/>
+            <column name="trading_style" type="VARCHAR(30)"/>
+        </addColumn>
+
+        <!-- Seed security endpoint configs for users profile endpoint -->
+        <insert tableName="security_endpoint_configs">
+            <column name="path" value="/users/**"/>
+            <column name="access_level" value="USER"/>
+            <column name="is_active" valueBoolean="true"/>
+            <column name="description" value="User profile management endpoints"/>
+        </insert>
+    </changeSet>
+
+</databaseChangeLog>

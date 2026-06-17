@@ -8,9 +8,9 @@ import org.tradebook.journal.common.enums.PositionDirection;
 import org.tradebook.journal.common.enums.PositionStatus;
 import org.tradebook.journal.common.enums.TradeType;
 import org.tradebook.journal.features.ingestion.entity.TradeBookMaster;
-import org.tradebook.journal.features.ingestion.entity.TradePositions;
+import org.tradebook.journal.features.ingestion.entity.TradeSummary;
 import org.tradebook.journal.features.ingestion.repository.TradeBookMasterRepository;
-import org.tradebook.journal.features.ingestion.repository.TradePositionRepository;
+import org.tradebook.journal.features.ingestion.repository.TradeSummaryRepository;
 import org.tradebook.journal.features.journal.repository.TradeRepository;
 
 import java.math.BigDecimal;
@@ -23,7 +23,7 @@ import java.util.List;
 @RequiredArgsConstructor
 public class TradePositionDiscoveryService {
 
-    private final TradePositionRepository tradePositionRepository;
+    private final TradeSummaryRepository tradeSummaryRepository;
     private final TradeBookMasterRepository tradeBookMasterRepository;
     private final TradeRepository tradeRepository;
 
@@ -34,7 +34,7 @@ public class TradePositionDiscoveryService {
         PositionDirection incomingDirection = getDirection(trade.getTradeType());
         PositionDirection targetOppositeDirection = getOppositeDirection(incomingDirection);
 
-        List<TradePositions> openPositions = tradePositionRepository.findByUserIdAndSymbolAndSegmentAndDirectionAndStatusInOrderByCreatedAtAsc(
+        List<TradeSummary> openPositions = tradeSummaryRepository.findByUserIdAndSymbolAndSegmentAndDirectionAndPositionStatusInOrderByCreatedAtAsc(
                 trade.getUserId(),
                 trade.getSymbol(),
                 trade.getSegment(),
@@ -44,7 +44,7 @@ public class TradePositionDiscoveryService {
 
         long qtyToProcess = Math.abs(trade.getTotalQuantity());
 
-        for (TradePositions position : openPositions) {
+        for (TradeSummary position : openPositions) {
             if (qtyToProcess <= 0) break;
             long availableQty = position.getOpenQty();
             long matchQty = Math.min(qtyToProcess, availableQty);
@@ -64,13 +64,13 @@ public class TradePositionDiscoveryService {
     }
 
     private void createNewPosition(TradeBookMaster trade, PositionDirection direction, long quantity) {
-        TradePositions newPos = TradePositions.builder()
+        TradeSummary newPos = TradeSummary.builder()
                 .userId(trade.getUserId())
                 .symbol(trade.getSymbol())
                 .segment(trade.getSegment())
                 .exchange(trade.getExchange())
                 .direction(direction)
-                .status(PositionStatus.OPEN)
+                .positionStatus(PositionStatus.OPEN)
                 .entryQty(quantity)
                 .openQty(quantity)
                 .exitQty(0L)
@@ -82,11 +82,11 @@ public class TradePositionDiscoveryService {
                 .openedAt(trade.getOrderExecutionTime())
                 .build();
 
-        tradePositionRepository.save(newPos);
+        tradeSummaryRepository.save(newPos);
         log.info("Opened NEW Position: Symbol={} Dir={} Qty={}", trade.getSymbol(), direction, quantity);
     }
 
-    private void closePositionPortion(TradePositions position, long matchQty, BigDecimal exitPrice, Long tradeId, LocalDateTime exitTime) {
+    private void closePositionPortion(TradeSummary position, long matchQty, BigDecimal exitPrice, Long tradeId, LocalDateTime exitTime) {
 
         BigDecimal matchedQtyBd = BigDecimal.valueOf(matchQty);
         BigDecimal pnlChunk = calculatePnl(position, exitPrice, matchedQtyBd);
@@ -112,20 +112,20 @@ public class TradePositionDiscoveryService {
         position.setOpenQty(position.getOpenQty() - matchQty);
 
         if (position.getOpenQty() == 0) {
-            position.setStatus(PositionStatus.CLOSED);
+            position.setPositionStatus(PositionStatus.CLOSED);
             position.setClosedAt(exitTime);
         } else {
-            position.setStatus(PositionStatus.PARTIAL);
+            position.setPositionStatus(PositionStatus.PARTIAL);
         }
 
         position.setLastTradeId(tradeId);
 
-        tradePositionRepository.save(position);
+        tradeSummaryRepository.save(position);
         log.info("Closed Portion: ID={} MatchQty={} PnL={}", position.getId(), matchQty, pnlChunk);
     }
 
 
-    private BigDecimal calculatePnl(TradePositions position, BigDecimal currentPrice, BigDecimal qty) {
+    private BigDecimal calculatePnl(TradeSummary position, BigDecimal currentPrice, BigDecimal qty) {
         BigDecimal entryVal = position.getEntryAvgPrice().multiply(qty);
         BigDecimal exitVal = currentPrice.multiply(qty);
 
