@@ -1,0 +1,242 @@
+{
+	"info": {
+		"_postman_id": "aa1b7c4d-9a6e-4b2a-8c3d-1e2f3a4b5c6d",
+		"name": "Trade Journal API",
+		"description": "API collection for Trade Journal Application (Phase 1 MVP)",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "Auth",
+			"item": [
+				{
+					"name": "Register",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"email\": \"testuser@example.com\",\n    \"password\": \"password123\",\n    \"currency\": \"USD\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/auth/register",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"auth",
+								"register"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Login",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"var jsonData = pm.response.json();",
+									"pm.environment.set(\"jwt_token\", jsonData.token);"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"email\": \"testuser@example.com\",\n    \"password\": \"password123\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/auth/login",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"auth",
+								"login"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Journal",
+			"item": [
+				{
+					"name": "Create Trade",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{jwt_token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"symbol\": \"AAPL\",\n    \"entryPrice\": 150.00,\n    \"quantity\": 10,\n    \"tradeDate\": \"2023-10-27\",\n    \"status\": \"OPEN\",\n    \"direction\": \"LONG\",\n    \"plan\": {\n        \"targetPrice\": 160.00,\n        \"stopLossPrice\": 145.00,\n        \"notes\": \"Strong earnings setup\"\n    }\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/trades",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"trades"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get Trades",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{jwt_token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/trades?startDate=2023-01-01&endDate=2023-12-31",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"trades"
+							],
+							"query": [
+								{
+									"key": "startDate",
+									"value": "2023-01-01"
+								},
+								{
+									"key": "endDate",
+									"value": "2023-12-31"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Update Trade",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{jwt_token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "PATCH",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"exitPrice\": 155.00,\n    \"exitDate\": \"2023-10-28T10:00:00\",\n    \"status\": \"CLOSED_PROFIT\",\n    \"fees\": 2.00\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/trades/1",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"trades",
+								"1"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Ingestion",
+			"item": [
+				{
+					"name": "Upload File",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "file",
+									"type": "file",
+									"src": []
+								},
+								{
+									"key": "file-metadata",
+									"value": "{\n    \"file-type\": \"CSV\",\n    \"source-system\": \"UI\",\n    \"description\": \"Test Upload\",\n    \"file-category\": \"TRADE_BOOK\"\n}",
+									"type": "text",
+									"contentType": "application/json"
+								}
+							]
+						},
+						"url": {
+							"raw": "{{base_url}}/file/upload",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"file",
+								"upload"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		}
+	],
+	"variable": [
+		{
+			"key": "base_url",
+			"value": "http://localhost:8085/api/v1",
+			"type": "string"
+		}
+	]
+}

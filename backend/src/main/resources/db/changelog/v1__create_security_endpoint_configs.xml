@@ -1,0 +1,153 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+    xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd">
+
+    <!-- =====================================================================
+         changeset: 001 – Create security_endpoint_configs table
+         ===================================================================== -->
+    <changeSet id="001-create-security-endpoint-configs" author="trade-journals">
+
+        <createTable tableName="security_endpoint_configs"
+                     remarks="Stores Ant-style URL patterns and their required access level.
+                              Loaded into Spring Security at startup; cache refreshed every 60s.">
+
+            <column name="id" type="BIGINT" autoIncrement="true">
+                <constraints primaryKey="true" nullable="false" primaryKeyName="pk_sec_endpoint_cfg"/>
+            </column>
+
+            <column name="path" type="VARCHAR(500)"
+                    remarks="Ant-style URL pattern, e.g. /auth/**">
+                <constraints nullable="false" unique="true" uniqueConstraintName="uk_sec_path"/>
+            </column>
+
+            <column name="access_level" type="VARCHAR(30)"
+                    remarks="PUBLIC | USER | ADMIN">
+                <constraints nullable="false"/>
+            </column>
+
+            <column name="is_active" type="BOOLEAN" defaultValueBoolean="true">
+                <constraints nullable="false"/>
+            </column>
+
+            <column name="description" type="TEXT"/>
+
+            <column name="created_at" type="TIMESTAMP(6)"/>
+            <column name="updated_at" type="TIMESTAMP(6)"/>
+
+        </createTable>
+
+    </changeSet>
+
+    <!-- =====================================================================
+         changeset: 002 – Seed default endpoint configuration
+         Mirrors the paths previously hard-coded in SecurityConfig.java
+         ===================================================================== -->
+    <changeSet id="002-seed-security-endpoint-configs" author="trade-journals">
+
+        <!-- ── Public (no token required) ── -->
+        <insert tableName="security_endpoint_configs">
+            <column name="path" value="/auth/**"/>
+            <column name="access_level" value="PUBLIC"/>
+            <column name="is_active" valueBoolean="true"/>
+            <column name="description" value="Authentication endpoints: login, register, logout"/>
+        </insert>
+
+        <insert tableName="security_endpoint_configs">
+            <column name="path" value="/v3/api-docs/**"/>
+            <column name="access_level" value="PUBLIC"/>
+            <column name="is_active" valueBoolean="true"/>
+            <column name="description" value="OpenAPI v3 JSON spec"/>
+        </insert>
+
+        <insert tableName="security_endpoint_configs">
+            <column name="path" value="/v3/api-docs"/>
+            <column name="access_level" value="PUBLIC"/>
+            <column name="is_active" valueBoolean="true"/>
+            <column name="description" value="OpenAPI v3 root spec"/>
+        </insert>
+
+        <insert tableName="security_endpoint_configs">
+            <column name="path" value="/swagger-ui/**"/>
+            <column name="access_level" value="PUBLIC"/>
+            <column name="is_active" valueBoolean="true"/>
+            <column name="description" value="Swagger UI static resources"/>
+        </insert>
+
+        <insert tableName="security_endpoint_configs">
+            <column name="path" value="/swagger-ui.html"/>
+            <column name="access_level" value="PUBLIC"/>
+            <column name="is_active" valueBoolean="true"/>
+            <column name="description" value="Swagger UI entry page"/>
+        </insert>
+
+        <insert tableName="security_endpoint_configs">
+            <column name="path" value="/swagger-resources/**"/>
+            <column name="access_level" value="PUBLIC"/>
+            <column name="is_active" valueBoolean="true"/>
+            <column name="description" value="Swagger legacy resources"/>
+        </insert>
+
+        <insert tableName="security_endpoint_configs">
+            <column name="path" value="/webjars/**"/>
+            <column name="access_level" value="PUBLIC"/>
+            <column name="is_active" valueBoolean="true"/>
+            <column name="description" value="WebJars static resources (Swagger)"/>
+        </insert>
+
+        <insert tableName="security_endpoint_configs">
+            <column name="path" value="/actuator/health"/>
+            <column name="access_level" value="PUBLIC"/>
+            <column name="is_active" valueBoolean="true"/>
+            <column name="description" value="Spring Boot Actuator health check – needed by Docker/K8s probes"/>
+        </insert>
+
+        <!-- ── Authenticated user paths ── -->
+        <insert tableName="security_endpoint_configs">
+            <column name="path" value="/trades/**"/>
+            <column name="access_level" value="USER"/>
+            <column name="is_active" valueBoolean="true"/>
+            <column name="description" value="Trade file upload and management endpoints"/>
+        </insert>
+
+        <insert tableName="security_endpoint_configs">
+            <column name="path" value="/trade-book-master/**"/>
+            <column name="access_level" value="USER"/>
+            <column name="is_active" valueBoolean="true"/>
+            <column name="description" value="Trade book master (processed trades) endpoints"/>
+        </insert>
+
+        <insert tableName="security_endpoint_configs">
+            <column name="path" value="/trade-positions/**"/>
+            <column name="access_level" value="USER"/>
+            <column name="is_active" valueBoolean="true"/>
+            <column name="description" value="Trade position aggregation endpoints"/>
+        </insert>
+
+        <insert tableName="security_endpoint_configs">
+            <column name="path" value="/trade-summary/**"/>
+            <column name="access_level" value="USER"/>
+            <column name="is_active" valueBoolean="true"/>
+            <column name="description" value="Trade summary (P&amp;L) endpoints"/>
+        </insert>
+
+        <insert tableName="security_endpoint_configs">
+            <column name="path" value="/analytics/**"/>
+            <column name="access_level" value="USER"/>
+            <column name="is_active" valueBoolean="true"/>
+            <column name="description" value="Analytics / reporting endpoints"/>
+        </insert>
+
+        <!-- ── Admin-only paths ── -->
+        <insert tableName="security_endpoint_configs">
+            <column name="path" value="/admin/**"/>
+            <column name="access_level" value="ADMIN"/>
+            <column name="is_active" valueBoolean="true"/>
+            <column name="description" value="Admin management endpoints including security config CRUD"/>
+        </insert>
+
+    </changeSet>
+
+</databaseChangeLog>

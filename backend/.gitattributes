@@ -1,0 +1,19 @@
+/mvnw text eol=lf
+*.cmd text eol=crlf
+
+# IDE files
+.idea/
+*.iml
+
+# Gradle
+.gradle/
+build/
+
+# Maven
+target/
+
+# OSX
+.DS_Store
+
+# Windows
+Thumbs.db

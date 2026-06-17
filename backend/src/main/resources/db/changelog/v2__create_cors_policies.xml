@@ -1,0 +1,95 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+    xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd">
+
+    <!-- =====================================================================
+         changeset: 001 – Create cors_policies table
+         ===================================================================== -->
+    <changeSet id="001-create-cors-policies" author="trade-journals">
+
+        <createTable tableName="cors_policies"
+                     remarks="Stores dynamic CORS policies for allowed origins, methods, headers, and credential handling.">
+
+            <column name="id" type="BIGINT" autoIncrement="true">
+                <constraints primaryKey="true" nullable="false" primaryKeyName="pk_cors_policy"/>
+            </column>
+
+            <column name="allowed_origin" type="VARCHAR(255)"
+                    remarks="Allowed origin URL, supporting wildcards (e.g. http://localhost:4200, http://*.example.com)">
+                <constraints nullable="false" unique="true" uniqueConstraintName="uk_cors_origin"/>
+            </column>
+
+            <column name="allowed_methods" type="VARCHAR(255)"
+                    remarks="Comma-separated HTTP methods (e.g. GET,POST,PUT,DELETE,OPTIONS)">
+                <constraints nullable="false"/>
+            </column>
+
+            <column name="allowed_headers" type="VARCHAR(500)"
+                    remarks="Comma-separated HTTP headers allowed by the server (e.g. * or Content-Type,Authorization)">
+                <constraints nullable="false"/>
+            </column>
+
+            <column name="exposed_headers" type="VARCHAR(500)"
+                    remarks="Comma-separated HTTP headers exposed to the client browser"/>
+
+            <column name="allow_credentials" type="BOOLEAN" defaultValueBoolean="true">
+                <constraints nullable="false"/>
+            </column>
+
+            <column name="max_age" type="BIGINT" defaultValueNumeric="3600">
+                <constraints nullable="false"/>
+            </column>
+
+            <column name="is_active" type="BOOLEAN" defaultValueBoolean="true">
+                <constraints nullable="false"/>
+            </column>
+
+            <column name="description" type="TEXT"/>
+
+            <!-- Audit columns matching BaseEntity -->
+            <column name="created_by" type="BIGINT"/>
+            <column name="updated_by" type="BIGINT"/>
+            <column name="created_at" type="TIMESTAMP"/>
+            <column name="updated_at" type="TIMESTAMP"/>
+
+        </createTable>
+
+    </changeSet>
+
+    <!-- =====================================================================
+         changeset: 002 – Seed default CORS policies for local development
+         ===================================================================== -->
+    <changeSet id="002-seed-cors-policies" author="trade-journals">
+
+        <!-- Seed Angular Local Dev Origin -->
+        <insert tableName="cors_policies">
+            <column name="allowed_origin" value="http://localhost:4200"/>
+            <column name="allowed_methods" value="GET,POST,PUT,DELETE,OPTIONS"/>
+            <column name="allowed_headers" value="*"/>
+            <column name="allow_credentials" valueBoolean="true"/>
+            <column name="max_age" valueNumeric="3600"/>
+            <column name="is_active" valueBoolean="true"/>
+            <column name="description" value="Default Angular local development environment"/>
+            <column name="created_at" valueComputed="CURRENT_TIMESTAMP"/>
+            <column name="updated_at" valueComputed="CURRENT_TIMESTAMP"/>
+        </insert>
+
+        <!-- Seed React Local Dev Origin -->
+        <insert tableName="cors_policies">
+            <column name="allowed_origin" value="http://localhost:3000"/>
+            <column name="allowed_methods" value="GET,POST,PUT,DELETE,OPTIONS"/>
+            <column name="allowed_headers" value="*"/>
+            <column name="allow_credentials" valueBoolean="true"/>
+            <column name="max_age" valueNumeric="3600"/>
+            <column name="is_active" valueBoolean="true"/>
+            <column name="description" value="Default React local development environment"/>
+            <column name="created_at" valueComputed="CURRENT_TIMESTAMP"/>
+            <column name="updated_at" valueComputed="CURRENT_TIMESTAMP"/>
+        </insert>
+
+    </changeSet>
+
+</databaseChangeLog>

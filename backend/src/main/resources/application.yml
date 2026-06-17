@@ -1,0 +1,133 @@
+server:
+  port: ${SERVER_PORT:8085}
+  servlet:
+    context-path: /api/v1
+  compression:
+    enabled: true
+    min-response-size: 2KB
+    mime-types: application/json,text/plain,text/html
+spring:
+  application:
+    name: trade-journals
+
+  profiles:
+    active: ${SPRING_PROFILE:local}
+
+  datasource:
+    url: ${DB_URL:jdbc:mysql://localhost:3306/tradebook_db?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC}
+    username: ${DB_USERNAME:admin}
+    password: ${DB_PASSWORD:Admin@!123}
+    driverClassName: com.mysql.cj.jdbc.Driver
+
+    hikari:
+      pool-name: TradeBook-HikariCP
+      minimum-idle: 5
+      maximum-pool-size: 20
+      idle-timeout: 30000
+      max-lifetime: 1800000
+      connection-timeout: 30000
+      auto-commit: false
+
+  jpa:
+    open-in-view: false
+    database-platform: org.hibernate.dialect.MySQLDialect
+    hibernate:
+      ddl-auto: update
+    properties:
+      hibernate:
+        format_sql: false
+        jdbc:
+          batch_size: 50
+        order_inserts: true
+        order_updates: true
+        generate_statistics: false
+    show-sql: true
+
+  servlet:
+    multipart:
+      enabled: true
+      max-file-size: 10MB
+      max-request-size: 10MB
+      file-size-threshold: 1MB
+
+
+
+  thymeleaf:
+    check-template-location: false
+
+  liquibase:
+    change-log: classpath:/db/changelog/db.changelog-master.xml
+
+# -------------------------
+# Logging Configuration
+# -------------------------
+logging:
+  level:
+    org.tradebook: ${LOGGING_LEVEL_APP:DEBUG}
+
+    # Spring
+    org.springframework: ${LOGGING_LEVEL_SPRING:INFO}
+    org.springframework.web: ${LOGGING_LEVEL_WEB:INFO}
+    org.springframework.transaction: ${LOGGING_LEVEL_TX:DEBUG}
+
+    # Hibernate (Enable only when debugging)
+    org.hibernate.SQL: DEBUG
+    org.hibernate.type.descriptor.sql.BasicBinder: TRACE
+    # org.hibernate.orm.jdbc.bind: TRACE
+
+    # JDBC
+    org.springframework.jdbc: INFO
+    org.springframework.orm.jpa: INFO
+
+    # Tomcat
+    org.apache.tomcat: WARN
+
+  file:
+    name: logs/trade-journal.log
+
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss.SSS} %-5level [%thread] %logger{36} - %msg%n"
+    file: "%d{yyyy-MM-dd HH:mm:ss.SSS} %-5level [%thread] %logger{36} - %msg%n"
+
+# -------------------------
+# File Processing Settings
+# -------------------------
+file:
+  processing:
+    interval-ms: 60000 # milliseconds (1 min)
+    batch-size: 1000
+    retry:
+      max-attempts: 3
+      delay-ms: 2000
+  storage:
+    upload-dir: ./uploads/source_files
+    processed-dir: ./uploads/processed
+    error-dir: ./uploads/error
+    supported-types:
+        - csv
+        - xlsx
+        - json
+
+trade:
+  book:
+    master:
+      processing:
+        interval-ms: 90000
+    position:
+      processing:
+        interval-ms: 90000
+
+security:
+  jwt:
+    secret-key: ${SECURITY_JWT_SECRET_KEY:ThisIsADefaultKeyForDevelopmentOnlyPleaseChangeInProductionToASecureHexKey}
+    expiration-ms: 86400000
+  endpoint-config:
+    # How often (ms) to refresh the in-memory path cache from the DB.
+    # Default: 60 000 ms (1 minute). Changes in the DB take effect within this window.
+    cache-refresh-ms: ${SECURITY_CONFIG_CACHE_REFRESH_MS:60000}
+
+tradebook:
+  application:
+    default-currency: "USD"
+    frontend-url: ${FRONTEND_URL:http://localhost:4300}
+    password-reset-token-expiry-minutes: ${PASSWORD_RESET_TOKEN_EXPIRY_MINUTES:15}
