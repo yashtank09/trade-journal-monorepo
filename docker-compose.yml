@@ -1,0 +1,66 @@
+version: '3.8'
+
+services:
+  mysql-db:
+    image: mysql:8.0
+    container_name: mysql-db
+    restart: always
+    environment:
+      MYSQL_DATABASE: tradebook_db
+      MYSQL_USER: admin
+      MYSQL_PASSWORD: Admin@!123
+      MYSQL_ROOT_PASSWORD: rootpassword
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql-data:/var/lib/mysql
+    networks:
+      - trade-journal-net
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: trade-journal-backend
+    restart: always
+    environment:
+      SERVER_PORT: 8085
+      DB_URL: jdbc:mysql://mysql-db:3306/tradebook_db?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC
+      DB_USERNAME: admin
+      DB_PASSWORD: Admin@!123
+      SPRING_PROFILE: local
+      SECURITY_JWT_SECRET_KEY: ThisIsADefaultKeyForDevelopmentOnlyPleaseChangeInProductionToASecureHexKey
+      FRONTEND_URL: http://localhost:4200
+    ports:
+      - "8085:8085"
+    depends_on:
+      mysql-db:
+        condition: service_healthy
+    networks:
+      - trade-journal-net
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: trade-journal-frontend
+    restart: always
+    ports:
+      - "4200:80"
+    depends_on:
+      - backend
+    networks:
+      - trade-journal-net
+
+volumes:
+  mysql-data:
+    driver: local
+
+networks:
+  trade-journal-net:
+    driver: bridge
